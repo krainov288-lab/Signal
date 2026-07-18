@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGNAL v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0A0C10; --bg1:#12151B;
+    --surface:#181C24; --surface-2:#1E232C;
+    --glass:rgba(24,29,38,0.66); --glass-brd:rgba(255,255,255,0.10);
+    --text:#EDEFF3; --text-dim:#9199A8;
+    --teal:#49B8AA; --teal-dim:#2C625A; --teal-soft:rgba(73,184,170,0.14);
+    --gold:#D9A54B; --ember:#E2704A; --violet:#8B7FD8;
+    --line:rgba(255,255,255,0.09);
+    --btn:44px; --radius:18px; --sparks-h:66px;
+  }
+  html[data-theme="light"]{
+    --bg0:#EEF1F5; --bg1:#F7F8FA;
+    --surface:#FFFFFF; --surface-2:#F1F3F7;
+    --glass:rgba(255,255,255,0.58); --glass-brd:rgba(20,25,35,0.08);
+    --text:#181B21; --text-dim:#6A7180;
+    --teal:#178C7C; --teal-dim:#CFEDE8; --teal-soft:rgba(23,140,124,0.10);
+    --gold:#A9781F; --ember:#C0522E; --violet:#6E62C4;
+    --line:rgba(20,25,35,0.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:#000;font-family:'Inter',sans-serif;color:var(--text);}
+  .device{max-width:420px;margin:0 auto;min-height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column;
+    background:radial-gradient(circle at 15% 0%, var(--teal-soft), transparent 45%),radial-gradient(circle at 90% 15%, rgba(217,165,75,0.10), transparent 40%),linear-gradient(180deg,var(--bg0),var(--bg1));}
+  .icon-btn{width:var(--btn);height:var(--btn);border-radius:14px;background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-brd);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex:0 0 var(--btn);}
+  button{font-family:inherit;}
+
+  /* ===== sparks bar = top bar (sticky, translucent, minimal) ===== */
+  .sparks-bar{position:sticky;top:0;z-index:25;height:var(--sparks-h);display:flex;align-items:center;gap:10px;padding:0 14px;
+    background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line);overflow-x:auto;}
+  .spark{flex:0 0 auto;width:44px;height:44px;border-radius:50%;padding:3px;cursor:pointer;position:relative;}
+  .spark .inner{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:'Fraunces',serif;position:relative;z-index:1;color:#181205;background-size:cover;background-position:center;}
+  .spark::before{content:"";position:absolute;inset:0;border-radius:50%;z-index:0;background:var(--line);}
+  .spark.unread::before{
+    background:conic-gradient(from 0deg, var(--teal) 0deg, var(--gold) 70deg, var(--ember) 130deg, transparent 165deg, transparent 360deg);
+    animation:sparkChase 1.8s linear infinite;
+    box-shadow:0 0 6px rgba(73,184,170,0.4);
+  }
+  @keyframes sparkChase{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .spark.seen::before{background:var(--line);}
+  .spark.mine .inner::after{content:"👁";position:absolute;bottom:-3px;right:-3px;font-size:9px;background:var(--surface);border-radius:50%;padding:1px;}
+  .spark.you .inner{border:1.5px dashed var(--text-dim);font-size:16px;font-weight:400;color:var(--text-dim);background:var(--surface);}
+  .spark.you::before{display:none;}
+
+  /* reply panel */
+  .replies-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
+  .replies-panel.open{display:block;}
+  .reply-item{display:flex;gap:8px;margin-bottom:10px;}
+  .reply-item .ravatar{width:26px;height:26px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 26px;}
+  .reply-item .rbody{flex:1;}
+  .reply-item .rhead{display:flex;align-items:center;gap:6px;}
+  .reply-item .rname{font-size:12px;font-weight:600;}
+  .reply-item .rtime{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);}
+  .reply-item .rtext{font-size:12.5px;line-height:1.5;margin-top:2px;}
+  .reply-item .redit{background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;margin-left:6px;}
+  .reply-item textarea{width:100%;font-size:12.5px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;resize:none;margin-top:4px;}
+  .reply-add{display:flex;gap:8px;margin-top:6px;}
+  .reply-add input{flex:1;height:36px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:0 12px;color:var(--text);outline:none;font-size:12.5px;}
+  .reply-add button{height:36px;padding:0 12px;border-radius:12px;background:var(--teal);border:none;color:#06201B;font-size:12px;cursor:pointer;}
+
+  .body-wrap{flex:1;position:relative;overflow:hidden;}
+  .screen{position:absolute;inset:0;display:none;padding:14px 16px 130px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .screen.active{display:block;}
+  .pull-content{transition:transform .18s ease;}
+  .pull-indicator{position:absolute;top:8px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);opacity:0;pointer-events:none;transition:opacity .15s;}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin:14px 0 10px;display:flex;align-items:center;gap:8px;}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line);}
+  .eyebrow:first-child{margin-top:2px;}
+  p.hint{font-size:12.5px;color:var(--text-dim);line-height:1.6;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Fraunces',serif;color:#181205;cursor:pointer;flex:0 0 40px;background-size:cover;background-position:center;}
+  .avatar.online{box-shadow:0 0 0 2px var(--bg1),0 0 0 4px var(--teal);}
+  .avatar-locked{width:76px;height:76px;border-radius:50%;margin:0 auto;background:var(--surface-2);border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--text-dim);}
+  .card-head .who{flex:1;cursor:pointer;}
+  .card-head .name{font-weight:600;font-size:14.5px;}
+  .card-head .meta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);}
+  .circle-tag{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;border:1px solid var(--teal-dim);color:var(--teal);padding:3px 8px;border-radius:20px;text-transform:uppercase;}
+  .card p{font-size:14.5px;line-height:1.55;margin:0 0 10px;color:var(--text);}
+  .card-media{width:100%;height:150px;border-radius:12px;margin-bottom:10px;background:linear-gradient(135deg,var(--surface-2),var(--bg0));display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .card-foot{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:10px;position:relative;}
+
+  .react-btn{height:var(--btn);padding:0 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;}
+  .react-btn.active{color:var(--teal);border-color:var(--teal-dim);}
+  .reactions-bar{display:flex;align-items:center;gap:4px;height:var(--btn);padding:0 10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer;flex-wrap:nowrap;}
+  .rx-pill{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text-dim);}
+  .rx-more{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);}
+  .rx-empty{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .reply-btn{height:var(--btn);padding:0 14px;border-radius:14px;background:none;border:1px solid var(--line);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;}
+  .dm-btn{width:var(--btn);height:var(--btn);border-radius:14px;background:none;border:1px solid var(--line);color:var(--text-dim);cursor:pointer;margin-left:auto;font-size:16px;}
+  .reaction-picker{position:absolute;bottom:52px;left:0;display:none;gap:6px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-brd);border-radius:16px;padding:6px;box-shadow:0 10px 26px rgba(0,0,0,0.3);}
+  .reaction-picker.open{display:flex;}
+  .reaction-picker .r{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;}
+  .reaction-picker .r:hover{background:var(--surface-2);}
+
+  .end-card{text-align:center;padding:30px 20px;color:var(--text-dim);font-family:'Fraunces',serif;font-size:15.5px;font-style:italic;border:1px dashed var(--line);border-radius:var(--radius);}
+  .end-card small{display:block;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:10.5px;}
+
+  .digest-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:16px;cursor:pointer;}
+  .digest-banner .db-ic{font-size:20px;}
+  .digest-banner .db-text{flex:1;}
+  .digest-banner .db-text b{display:block;font-size:13.5px;}
+  .digest-banner .db-text span{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:2px;}
+  .digest-banner .db-chev{color:var(--text-dim);font-size:18px;}
+
+  .digest-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .digest-item:last-of-type{border-bottom:none;}
+  .digest-num{width:38px;height:38px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 38px;}
+  .digest-item.urgent .digest-num{background:rgba(226,112,74,0.14);border-color:var(--ember);}
+  .digest-body{flex:1;}
+  .digest-title{font-size:14.5px;font-weight:700;color:var(--text);}
+  .digest-title .hl{color:var(--ember);}
+  .digest-sub{font-size:12px;color:var(--text-dim);margin-top:2px;line-height:1.5;}
+  .digest-cat{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin:16px 0 2px;}
+  .digest-cat:first-child{margin-top:0;}
+
+  .liveliness{display:flex;align-items:flex-end;gap:2px;height:20px;margin-top:5px;}
+  .liveliness i{display:block;width:4px;border-radius:2px;background:var(--line);}
+  .liveliness i.hot{background:var(--teal);}
+  .live-tag{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--teal);margin-top:3px;}
+
+  .circle-row{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:12px;}
+  .circle-icon{width:44px;height:44px;border-radius:12px;flex:0 0 44px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px;}
+  .circle-row .info{flex:1;}
+  .circle-row .cname{font-weight:600;font-size:14.5px;}
+  .circle-row .csub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);}
+  .join-btn{height:var(--btn);padding:0 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;background:none;color:var(--teal);border:1px solid var(--teal-dim);border-radius:14px;cursor:pointer;}
+
+  .compose-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .compose-box textarea{width:100%;min-height:110px;background:transparent;border:none;resize:none;color:var(--text);font-family:'Fraunces',serif;font-size:17px;outline:none;line-height:1.5;}
+  .compose-box textarea::placeholder{color:var(--text-dim);opacity:.7;}
+  .compose-tools{display:flex;gap:10px;padding-top:12px;border-top:1px solid var(--line);margin-top:6px;}
+  .visibility-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .vis-chip{height:var(--btn);display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:0 12px;border-radius:14px;border:1px solid var(--line);color:var(--text-dim);cursor:pointer;}
+  .vis-chip.selected{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+  .send-btn{width:100%;height:52px;margin-top:16px;border:none;border-radius:14px;background:var(--teal);color:#06201B;font-weight:700;font-family:'IBM Plex Mono',monospace;letter-spacing:1px;text-transform:uppercase;font-size:13px;cursor:pointer;}
+
+  .fmt-row{display:flex;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+  .fmt-btn{width:32px;height:32px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);color:var(--text);font-size:13px;cursor:pointer;}
+  .compose-edit{min-height:100px;color:var(--text);font-family:'Fraunces',serif;font-size:17px;outline:none;line-height:1.5;}
+  .compose-edit:empty::before{content:attr(data-placeholder);color:var(--text-dim);opacity:.7;}
+  .emoji-picker{display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface-2);border-radius:12px;margin-top:8px;}
+  .emoji-picker.open{display:flex;}
+  .emoji-picker span{font-size:20px;cursor:pointer;padding:4px;}
+  .location-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:6px 10px;font-size:12px;margin-top:8px;}
+  .location-chip button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;}
+  .media-preview-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .media-thumb{width:64px;height:64px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;background-size:cover;background-position:center;}
+  .media-thumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--ember);border:none;color:#fff;font-size:10px;cursor:pointer;}
+  .live-banner{display:flex;align-items:center;gap:8px;background:rgba(226,112,74,0.14);border:1px solid var(--ember);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--text);}
+  .live-banner button{margin-left:auto;height:28px;padding:0 10px;border-radius:8px;background:none;border:1px solid var(--ember);color:var(--ember);font-size:11px;cursor:pointer;}
+  #liveBtn.active{background:var(--ember);color:#fff;border-color:var(--ember);}
+
+  .station-head{text-align:center;padding:6px 0 18px;position:relative;}
+  .station-messages-btn{position:absolute;top:0;right:0;}
+  .station-avatar{width:76px;height:76px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:#181205;cursor:pointer;position:relative;background-size:cover;background-position:center;}
+  .station-avatar.online{box-shadow:0 0 0 3px var(--bg1),0 0 0 6px var(--teal);}
+  .station-avatar .cam-badge{position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .station-head h2{font-family:'Fraunces',serif;font-weight:600;margin:0;font-size:20px;}
+  .station-head p{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-dim);margin:4px 0 0;}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:12px;}
+  .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+
+  .milestone-row{display:flex;gap:10px;overflow-x:auto;padding:2px 0 6px;}
+  .milestone{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:120px;}
+  .milestone .mi{font-size:18px;margin-bottom:6px;}
+  .milestone .mt{font-size:12px;font-weight:600;}
+  .milestone .ms{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);margin-top:2px;}
+  .timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .timeline-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:6px;flex:0 0 8px;}
+  .timeline-item p{margin:0;font-size:13.5px;line-height:1.5;}
+  .timeline-item .tm{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:3px;}
+
+  .settings-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .settings-block-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+  .settings-block-head b{font-size:14px;}
+  .settings-block-head .chev{color:var(--text-dim);transition:transform .2s;}
+  .settings-block.open .chev{transform:rotate(180deg);}
+  .settings-block-body{display:none;margin-top:14px;}
+  .settings-block.open .settings-block-body{display:block;}
+  .tuner-row{margin-bottom:16px;}
+  .tuner-row:last-child{margin-bottom:0;}
+  .tuner-row-head{display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;}
+  .tuner-row-head b{font-weight:600;}
+  .tuner-row-head span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);}
+  .tuner-row p.hint{margin:2px 0 8px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid var(--surface);box-shadow:0 0 0 1.5px var(--teal-dim);cursor:pointer;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-dim);cursor:pointer;}
+  .chip.selected{border-color:var(--gold);color:var(--gold);background:rgba(217,165,75,.12);}
+
+  .setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row .sub{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:2px;}
+  .switch{width:40px;height:24px;border-radius:20px;background:var(--surface-2);border:1px solid var(--line);position:relative;cursor:pointer;flex:0 0 40px;}
+  .switch.on{background:var(--teal-dim);}
+  .switch::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:var(--text);top:2px;left:2px;transition:.2s;}
+  .switch.on::after{left:18px;}
+  html[data-theme="dark"] .switch.on::after{background:#08201C;}
+  html[data-theme="light"] .switch.on::after{background:#fff;}
+
+  .theme-toggle-row{display:flex;gap:10px;margin-top:8px;}
+  .theme-opt{flex:1;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;cursor:pointer;background:var(--surface-2);}
+  .theme-opt.selected{border-color:var(--teal);background:var(--teal-soft);}
+  .theme-opt .to-ic{font-size:20px;margin-bottom:4px;}
+  .theme-opt .to-lbl{font-size:11.5px;font-family:'IBM Plex Mono',monospace;}
+
+  .priv-item{margin-bottom:16px;}
+  .priv-item:last-of-type{margin-bottom:10px;}
+  .priv-label{font-size:13px;font-weight:600;margin-bottom:7px;}
+  .priv-label .sub{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);font-weight:400;margin-top:2px;}
+  .priv-chips{display:flex;gap:8px;}
+  .priv-chips .vis-chip{flex:1;justify-content:center;}
+
+  .dm-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:10px;cursor:pointer;}
+  .dm-row .info{flex:1;min-width:0;}
+  .dm-row .name{font-weight:600;font-size:14px;}
+  .dm-row .last{font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dm-row .tm{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);}
+  .unread-dot{width:8px;height:8px;border-radius:50%;background:var(--ember);}
+
+  .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49;display:none;}
+  .sheet-overlay.open{display:block;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-width:420px;margin:0 auto;z-index:50;background:var(--bg1);border-top:1px solid var(--line);border-radius:22px 22px 0 0;height:88vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s ease;}
+  .sheet.open{transform:translateY(0);}
+  .sheet-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--glass);backdrop-filter:blur(20px);border-radius:22px 22px 0 0;}
+  .sheet-head .who b{display:block;font-size:14.5px;}
+  .sheet-head .who span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);}
+  .sheet-body{flex:1;overflow-y:auto;padding:16px;}
+  .bubble{max-width:78%;padding:10px 13px;border-radius:16px;margin-bottom:8px;font-size:13.5px;line-height:1.5;}
+  .bubble.in{background:var(--surface-2);border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .bubble.out{background:var(--teal-dim);color:var(--text);margin-left:auto;border-bottom-right-radius:4px;}
+  html[data-theme="dark"] .bubble.out{color:#EAFBF8;}
+  .sheet-input{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--line);align-items:center;}
+  .sheet-input input{flex:1;height:var(--btn);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px;color:var(--text);outline:none;font-size:13.5px;}
+  .sheet-send{width:var(--btn);height:var(--btn);border-radius:14px;background:var(--teal);border:none;color:#06201B;font-size:16px;cursor:pointer;}
+  .ai-chip{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--teal-soft);color:var(--teal);padding:5px 10px;border-radius:20px;margin-bottom:8px;}
+  .ai-suggest{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .ai-suggest button{height:36px;padding:0 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);color:var(--text);font-size:12px;cursor:pointer;}
+
+  .spark-preview{position:relative;width:100%;aspect-ratio:9/13;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#232a35,#12151b);display:flex;align-items:center;justify-content:center;padding:20px;}
+  .spark-preview-media{position:absolute;inset:0;background:repeating-linear-gradient(135deg,#2a2f38,#2a2f38 10px,#20242c 10px,#20242c 20px);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:34px;}
+  .spark-preview p{position:relative;z-index:2;color:#fff;font-family:'Fraunces',serif;font-size:19px;text-align:center;line-height:1.5;outline:none;max-width:90%;}
+  .spark-preview p:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,0.45);}
+  .spark-sticker{position:absolute;top:14px;right:14px;z-index:3;font-size:30px;background:rgba(0,0,0,0.3);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .bg-swatches{display:flex;gap:10px;}
+  .bgsw{width:36px;height:36px;border-radius:10px;cursor:pointer;border:2px solid transparent;}
+  .bgsw.selected{border-color:var(--teal);}
+
+  .onboard{position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,var(--bg0),var(--bg1));display:flex;flex-direction:column;max-width:420px;margin:0 auto;}
+  .onboard-slides{flex:1;position:relative;overflow:hidden;}
+  .ob-slide{position:absolute;inset:0;padding:50px 28px 0;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateX(30px);transition:.35s ease;pointer-events:none;}
+  .ob-slide.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+  .ob-icon{width:88px;height:88px;border-radius:24px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:26px;}
+  .ob-slide h3{font-family:'Fraunces',serif;font-size:22px;margin:0 0 12px;}
+  .ob-slide p{font-size:14px;color:var(--text-dim);line-height:1.6;max-width:280px;}
+  .ob-foot{padding:20px 24px 34px;}
+  .ob-dots{display:flex;justify-content:center;gap:7px;margin-bottom:20px;}
+  .ob-dots span{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .ob-dots span.active{background:var(--teal);width:18px;border-radius:4px;}
+  .ob-btn{width:100%;height:52px;border:none;border-radius:14px;background:var(--teal);color:#06201B;font-weight:700;font-size:14px;cursor:pointer;}
+  .ob-skip{display:block;text-align:center;margin-top:12px;background:none;border:none;color:var(--text-dim);font-size:12.5px;cursor:pointer;}
+
+  .navbar-wrap{position:sticky;bottom:0;left:0;right:0;padding:0 18px 18px;z-index:20;}
+  .navbar{position:relative;display:flex;align-items:center;background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:34px;padding:8px 10px;box-shadow:0 12px 30px rgba(0,0,0,0.28);}
+  .nav-btn{flex:1;background:none;border:none;color:var(--text-dim);display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:8.7px;cursor:pointer;padding:6px 2px;border-radius:14px;min-height:var(--btn);}
+  .nav-btn .ic{font-size:18px;}
+  .nav-btn.active{color:var(--teal);}
+  .nav-gap{width:60px;flex:0 0 60px;}
+  .ai-collar{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:80px;height:36px;background:var(--glass);border-radius:50%;filter:blur(2px);z-index:1;}
+  .ai-orb{position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;z-index:2;cursor:pointer;border:none;padding:0;
+    background:url('data:image/png;base64,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') center/cover no-repeat;
+    box-shadow:0 0 0 4px var(--bg1),0 8px 22px rgba(0,0,0,0.35),0 0 26px rgba(73,184,170,0.45);
+    display:flex;align-items:center;justify-content:center;animation:orbfloat 3.4s ease-in-out infinite;}
+  .ai-orb::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 -6px 10px rgba(0,0,0,0.35);}
+  @keyframes orbfloat{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-4px);}}
+
+  /* ===== minimal pull-to-search bubble ===== */
+  .search-bubble{position:absolute;left:50%;top:calc(var(--sparks-h) + 10px);transform:translate(-50%,-8px);width:82%;z-index:35;
+    background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:26px;
+    padding:4px;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .2s ease;box-shadow:0 10px 26px rgba(0,0,0,0.3);}
+  .search-bubble.open{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+  .search-bubble .row{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;}
+  .search-bubble input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13.5px;}
+  .search-bubble input::placeholder{color:var(--text-dim);}
+  .search-bubble .mag{font-size:14px;opacity:.8;}
+
+  ::-webkit-scrollbar{display:none;}
+
+  /* ===== DM redesign ===== */
+  .dm-head-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Fraunces',serif;color:#181205;cursor:pointer;flex:0 0 36px;}
+  .dm-head-avatar.online{box-shadow:0 0 0 2px var(--bg1),0 0 0 4px var(--teal);}
+  .dm-search-bubble{position:absolute;left:50%;top:70px;transform:translate(-50%,-8px);width:88%;z-index:60;
+    background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:22px;
+    padding:4px;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .2s ease;box-shadow:0 10px 26px rgba(0,0,0,0.35);}
+  .dm-search-bubble.open{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+  .dm-search-bubble .row{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;}
+  .dm-search-bubble input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13.5px;}
+  .dm-search-bubble input::placeholder{color:var(--text-dim);}
+  .dm-search-results{max-height:200px;overflow-y:auto;padding:0 6px 6px;}
+  .dm-search-hit{padding:8px 10px;border-radius:12px;font-size:12.5px;color:var(--text-dim);cursor:pointer;}
+  .dm-search-hit b{color:var(--gold);}
+  .dm-search-hit:hover{background:var(--surface-2);}
+
+  .dm-menu{position:absolute;right:14px;top:66px;z-index:60;background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:16px;padding:6px;
+    opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .15s,transform .15s;box-shadow:0 10px 26px rgba(0,0,0,0.35);min-width:200px;}
+  .dm-menu.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .dm-menu-item{padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;color:var(--text);}
+  .dm-menu-item:hover{background:var(--surface-2);}
+
+  .dm-input-pill{display:flex;align-items:center;gap:4px;margin:8px 16px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:28px;padding:5px 6px 5px 6px;position:relative;}
+  .dm-pill-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--text-dim);flex:0 0 38px;background:none;border:none;user-select:none;touch-action:none;}
+  .dm-pill-icon.active-mode{color:var(--teal);}
+  .dm-input-pill input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;min-width:0;}
+  .dm-mic-hint{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:var(--glass);border:1px solid var(--glass-brd);border-radius:10px;padding:4px 10px;font-size:10.5px;color:var(--text);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;}
+  .dm-mic-hint.show{opacity:1;}
+
+  .dm-attach-menu, .dm-sticker-panel{position:absolute;bottom:60px;left:16px;right:16px;background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:20px;padding:14px;
+    opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .16s,transform .16s;box-shadow:0 -8px 26px rgba(0,0,0,0.3);z-index:55;max-height:280px;overflow-y:auto;}
+  .dm-attach-menu.open, .dm-sticker-panel.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .dm-attach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .dm-attach-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer;font-size:10.5px;color:var(--text-dim);}
+  .dm-attach-item .ic{font-size:20px;}
+
+  .sticker-tabs{display:flex;gap:8px;margin-bottom:10px;}
+  .sticker-tabs .vis-chip{flex:1;justify-content:center;}
+  .emoji-freq-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--line);}
+  .emoji-grid, .sticker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+  .emoji-grid span, .emoji-freq-row span{font-size:22px;cursor:pointer;text-align:center;padding:4px 0;flex:0 0 auto;}
+  .sticker-grid .stk{width:100%;aspect-ratio:1;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;background-size:cover;background-position:center;}
+  .sticker-upload-btn{grid-column:1/-1;height:44px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--line);color:var(--text-dim);font-size:12px;cursor:pointer;}
+
+  .bubble.mine-edit{outline:1px dashed var(--teal-dim);}
+  .msg-row{display:flex;flex-direction:column;margin-bottom:8px;}
+  .msg-row.out{align-items:flex-end;}
+  .msg-row.in{align-items:flex-start;}
+
+  /* voice message row */
+  .msg-voice{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:8px 14px 8px 8px;max-width:78%;cursor:pointer;}
+  .msg-voice .vp-btn{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#06201B;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 32px;}
+  .msg-voice .vp-wave{flex:1;height:20px;background:repeating-linear-gradient(90deg,var(--text-dim) 0 2px,transparent 2px 5px);opacity:.5;border-radius:4px;}
+  .msg-voice .vp-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);}
+
+  /* round video circle — clean circle, no bubble chrome */
+  .msg-circle-wrap{width:76px;height:76px;margin-bottom:8px;}
+  .msg-circle{width:76px;height:76px;border-radius:50%;overflow:hidden;cursor:pointer;position:relative;border:2px solid var(--line);background:#000;}
+  .msg-circle video{width:100%;height:100%;object-fit:cover;}
+  .msg-circle .play-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);color:#fff;font-size:20px;}
+
+  /* expanded circle overlay — centered, minimal side padding, fully round */
+  .circle-expand-overlay{position:fixed;inset:0;max-width:420px;margin:0 auto;z-index:90;background:rgba(6,7,9,0.88);display:none;align-items:center;justify-content:center;}
+  .circle-expand-overlay.open{display:flex;}
+  .circle-expand-video{width:calc(100% - 28px);aspect-ratio:1;border-radius:50%;object-fit:cover;background:#000;}
+
+  /* persistent media control bubble — speed + timeline + play/pause + close */
+  .media-player-bubble{position:fixed;left:50%;top:72px;transform:translateX(-50%);width:88%;max-width:380px;z-index:65;
+    background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--glass-brd);border-radius:20px;padding:14px;
+    display:none;box-shadow:0 12px 30px rgba(0,0,0,0.35);}
+  .media-player-bubble.show{display:block;}
+  .mpb-row{display:flex;align-items:center;gap:10px;}
+  .mpb-playpause{width:36px;height:36px;border-radius:50%;background:var(--teal);border:none;color:#06201B;font-size:14px;cursor:pointer;flex:0 0 36px;}
+  .mpb-close{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--text-dim);font-size:12px;cursor:pointer;flex:0 0 30px;}
+  .mpb-timeline{flex:1;-webkit-appearance:none;height:5px;border-radius:4px;background:var(--line);outline:none;}
+  .mpb-timeline::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--teal);cursor:pointer;}
+  .mpb-speed-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .mpb-speed-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);width:40px;flex:0 0 40px;}
+  .mpb-speed{-webkit-appearance:none;flex:1;height:10px;border-radius:6px;background:var(--surface-2);outline:none;}
+  .mpb-speed::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--teal);border:3px solid var(--bg1);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+
+  /* ===== story viewer — the actual "what's happening with others" mechanism ===== */
+  .story-viewer{position:fixed;inset:0;max-width:420px;margin:0 auto;z-index:70;background:#000;display:none;flex-direction:column;}
+  .story-viewer.open{display:flex;}
+  .story-progress{display:flex;gap:4px;padding:10px 10px 0;}
+  .story-progress .seg{flex:1;height:2.5px;border-radius:2px;background:rgba(255,255,255,0.25);overflow:hidden;}
+  .story-progress .seg i{display:block;height:100%;width:0%;background:#fff;}
+  .story-progress .seg.done i{width:100%;}
+  .story-head{display:flex;align-items:center;gap:10px;padding:10px 14px;}
+  .story-head .savatar{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'Fraunces',serif;color:#181205;}
+  .story-head b{font-size:13px;color:#fff;}
+  .story-head span{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.6);}
+  .story-head .story-close{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;width:var(--btn);height:var(--btn);}
+  .story-stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#232a35,#12151b);margin:0 10px;border-radius:16px;overflow:hidden;}
+  .story-stage p{color:#fff;font-family:'Fraunces',serif;font-size:19px;text-align:center;padding:0 26px;line-height:1.5;}
+  .story-zone{position:absolute;top:0;bottom:0;width:33%;z-index:2;}
+  .story-zone.left{left:0;} .story-zone.right{right:0;}
+  .story-caption{margin:0 10px;padding:10px 14px;background:rgba(255,255,255,0.08);border-radius:12px;color:#fff;font-size:12.5px;line-height:1.5;display:none;}
+  .story-caption.show{display:block;}
+  .story-heart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:80px;z-index:5;pointer-events:none;opacity:0;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4));}
+  .story-heart.burst{animation:heartburst .7s ease forwards;}
+  @keyframes heartburst{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}45%{transform:translate(-50%,-50%) scale(0.95);}100%{opacity:0;transform:translate(-50%,-50%) scale(1);}}
+  .story-reply{display:flex;gap:10px;padding:14px;align-items:center;}
+  .story-reply input{flex:1;height:42px;border-radius:22px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;padding:0 16px;outline:none;font-size:13px;}
+  .story-reply input::placeholder{color:rgba(255,255,255,0.6);}
+  .story-reply button{width:42px;height:42px;border-radius:50%;border:none;background:var(--teal);color:#06201B;font-size:16px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="onboard" id="onboard">
+  <div class="onboard-slides">
+    <div class="ob-slide active" data-i="0"><div class="ob-icon">◐</div><h3>Это SIGNAL</h3><p>Лента, которая не борется за твоё внимание, а показывает, что действительно происходит у людей вокруг тебя.</p></div>
+    <div class="ob-slide" data-i="1"><div class="ob-icon">✦</div><h3>Шар в центре — это ассистент</h3><p>Он умеет подстраивать ленту, уведомления и оформление под тебя — но только с твоего разрешения.</p></div>
+    <div class="ob-slide" data-i="2"><div class="ob-icon">◎</div><h3>Потяни вниз — найдёшь поиск</h3><p>Никакой лишней кнопки на экране: потяни ленту вниз до половины, и появится поиск.</p></div>
+  </div>
+  <div class="ob-foot"><div class="ob-dots"><span class="active"></span><span></span><span></span></div><button class="ob-btn" id="obNext">Далее</button><button class="ob-skip" id="obSkip">Пропустить</button></div>
+</div>
+
+<div class="device" id="app" style="display:none;">
+
+  <!-- sparks = the entire top bar now -->
+  <div class="sparks-bar" id="sparksBar">
+    <div class="spark you" onclick="openAddSpark()"><div class="inner">＋</div></div>
+    <div class="spark unread" id="spark-0" onclick="openStory(0)"><div class="inner">А</div></div>
+    <div class="spark unread" id="spark-1" onclick="openStory(1)"><div class="inner">М</div></div>
+    <div class="spark unread" id="spark-2" onclick="openStory(2)"><div class="inner">Л</div></div>
+    <div class="spark unread" id="spark-3" onclick="openStory(3)"><div class="inner">Д</div></div>
+    <div class="spark unread" id="spark-4" onclick="openStory(4)"><div class="inner">С</div></div>
+    <div class="spark unread" id="spark-5" onclick="openStory(5)"><div class="inner">И</div></div>
+  </div>
+
+  <div class="search-bubble" id="searchBubble">
+    <div class="row"><span class="mag">🔍</span><input id="searchInput" placeholder="Поиск..." /></div>
+  </div>
+
+  <div class="body-wrap" id="bodyWrap">
+
+    <!-- FEED -->
+    <div class="screen active" id="feed">
+      <div class="pull-indicator" id="pullFeed">потяни для поиска</div>
+      <div class="pull-content">
+        <div class="digest-banner" id="digestBanner" onclick="openDigest()" style="display:none;">
+          <span class="db-ic">🌙</span>
+          <div class="db-text"><b>Вечерний дайджест готов</b><span>6 сигналов · 2 новые искры · 1 живой круг</span></div>
+          <span class="db-chev">›</span>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="avatar online" onclick="openProfile('mark')">М</div>
+            <div class="who" onclick="openProfile('mark')"><div class="name">Марк Осин</div><div class="meta">14 мин назад · пешком, лес</div></div>
+            <div class="circle-tag">Тропа</div>
+          </div>
+          <p>Нашёл место, где сосны расступаются и видно всю долину. Стоял минут десять — просто смотрел.</p>
+          <div class="card-media">фото · 1 из 1</div>
+          <div class="card-foot">
+            <div class="reactions-bar" id="rxbar-c1" onclick="toggleReactionPicker(event,'c1')"></div>
+            <div class="reaction-picker" id="rxpicker-c1">
+              <div class="r" onclick="pickReaction(event,'c1','🤍')">🤍</div><div class="r" onclick="pickReaction(event,'c1','🔥')">🔥</div><div class="r" onclick="pickReaction(event,'c1','😮')">😮</div><div class="r" onclick="pickReaction(event,'c1','🙏')">🙏</div><div class="r" onclick="pickReaction(event,'c1','😂')">😂</div>
+            </div>
+            <button class="reply-btn" onclick="toggleReplies(this)">Ответить · 3</button>
+            <button class="dm-btn" onclick="openDM('mark')" title="Написать лично">✎</button>
+          </div>
+          <div class="replies-panel">
+            <div class="reply-item"><div class="ravatar">А</div><div class="rbody"><div class="rhead"><span class="rname">Аня</span><span class="rtime">10 мин назад</span></div><div class="rtext">Красиво, аж завидно.</div></div></div>
+            <div class="reply-item" data-mine="true" data-postedminutes="8"><div class="ravatar">Т</div><div class="rbody"><div class="rhead"><span class="rname">Ты</span><span class="rtime">8 мин назад</span><button class="redit" onclick="editReply(this)">✎ править</button></div><div class="rtext">Го туда вместе на неделе?</div></div></div>
+            <div class="reply-add"><input placeholder="Написать ответ..."><button onclick="addReply(this)">➤</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="avatar" onclick="openProfile('lika')">Л</div>
+            <div class="who" onclick="openProfile('lika')"><div class="name">Лика Ромм</div><div class="meta">1 ч назад · дома</div></div>
+            <div class="circle-tag">Гараж-бэнд</div>
+          </div>
+          <p>Собрали первую репетицию за полгода. Играли плохо, смеялись много.</p>
+          <div class="card-foot">
+            <div class="reactions-bar" id="rxbar-c2" onclick="toggleReactionPicker(event,'c2')"></div>
+            <div class="reaction-picker" id="rxpicker-c2">
+              <div class="r" onclick="pickReaction(event,'c2','🤍')">🤍</div><div class="r" onclick="pickReaction(event,'c2','🔥')">🔥</div><div class="r" onclick="pickReaction(event,'c2','😮')">😮</div><div class="r" onclick="pickReaction(event,'c2','🙏')">🙏</div><div class="r" onclick="pickReaction(event,'c2','😂')">😂</div>
+            </div>
+            <button class="reply-btn" onclick="toggleReplies(this)">Ответить · 8</button>
+            <button class="dm-btn" onclick="openDM('lika')" title="Написать лично">✎</button>
+          </div>
+          <div class="replies-panel">
+            <div class="reply-item"><div class="ravatar">Д</div><div class="rbody"><div class="rhead"><span class="rname">Дени</span><span class="rtime">50 мин назад</span></div><div class="rtext">Скинь запись, когда сведёте!</div></div></div>
+            <div class="reply-add"><input placeholder="Написать ответ..."><button onclick="addReply(this)">➤</button></div>
+          </div>
+        </div>
+
+        <div class="end-card">Это все свежие сигналы.<small>Хорошего вечера.</small></div>
+      </div>
+    </div>
+
+    <!-- CIRCLES -->
+    <div class="screen" id="circles">
+      <div class="pull-indicator">потяни для поиска</div>
+      <div class="pull-content">
+        <div class="eyebrow" style="align-items:center;">Твои круги<button class="join-btn" style="height:30px;padding:0 10px;" onclick="openCircleCreate()">+ создать</button></div>
+        <div class="circle-row" onclick="openCircleDetail('tropa')"><div class="circle-icon">🥾</div><div class="info"><div class="cname">Тропа</div><div class="csub">34 человека · 3 новых сигнала</div><div class="live-tag">🔥 ожил на этой неделе</div></div><button class="join-btn" onclick="event.stopPropagation();openCircleDetail('tropa')">внутри</button></div>
+        <div class="circle-row" onclick="openCircleDetail('band')"><div class="circle-icon">🎸</div><div class="info"><div class="cname">Гараж-бэнд</div><div class="csub">6 человек · закрытый</div></div><button class="join-btn" onclick="event.stopPropagation();openCircleDetail('band')">внутри</button></div>
+        <div class="circle-row" onclick="openCircleDetail('sosedi')"><div class="circle-icon">🏘️</div><div class="info"><div class="cname">Соседи · Тишинка</div><div class="csub">112 человек</div></div><button class="join-btn" onclick="event.stopPropagation();openCircleDetail('sosedi')">внутри</button></div>
+        <div class="eyebrow">Рядом по интересам</div>
+        <div class="circle-row" onclick="openCircleDetail('film')"><div class="circle-icon">📷</div><div class="info"><div class="cname">Плёночная фотография</div><div class="csub">890 человек</div></div><button class="join-btn" id="joinBtn-film" onclick="event.stopPropagation();quickJoin(this,'film')">войти</button></div>
+        <div class="circle-row" onclick="openCircleDetail('cook')"><div class="circle-icon">🍲</div><div class="info"><div class="cname">Готовим без рецепта</div><div class="csub">240 человек</div></div><button class="join-btn" id="joinBtn-cook" onclick="event.stopPropagation();quickJoin(this,'cook')">войти</button></div>
+        <div id="newCirclesHost"></div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="screen" id="messages">
+      <div class="pull-indicator">потяни для поиска</div>
+      <div class="pull-content">
+        <div class="eyebrow">Личное</div>
+        <p class="hint" style="margin-bottom:14px;">Отдельно от публичных сигналов — видно только тебе и собеседнику.</p>
+        <div class="dm-row" onclick="openDM('mark')"><div class="avatar online">М</div><div class="info"><div class="name">Марк Осин</div><div class="last">Го в горы на выходных?</div></div><div style="text-align:right;"><div class="tm">14:02</div><div class="unread-dot" style="margin-left:auto;margin-top:6px;"></div></div></div>
+        <div class="dm-row" onclick="openDM('lika')"><div class="avatar">Л</div><div class="info"><div class="name">Лика Ромм</div><div class="last">Скинула запись репетиции 🎸</div></div><div style="text-align:right;"><div class="tm">вчера</div></div></div>
+      </div>
+    </div>
+
+    <!-- TRANSMIT -->
+    <div class="screen" id="transmit">
+      <div class="pull-indicator">потяни для поиска</div>
+      <div class="pull-content">
+        <div class="eyebrow">Передать сигнал</div>
+        <div class="compose-box">
+          <div class="fmt-row">
+            <button class="fmt-btn" onclick="fmt('bold')"><b>Ж</b></button>
+            <button class="fmt-btn" onclick="fmt('italic')"><i>К</i></button>
+            <button class="fmt-btn" onclick="fmt('insertUnorderedList')">☰</button>
+            <button class="fmt-btn" onclick="toggleEmojiPicker()">😊</button>
+          </div>
+          <div id="transmitText" class="compose-edit" contenteditable="true" data-placeholder="Что происходит у тебя прямо сейчас?"></div>
+          <div class="emoji-picker" id="emojiPicker">
+            <span onclick="insertEmoji('😊')">😊</span><span onclick="insertEmoji('🔥')">🔥</span><span onclick="insertEmoji('🌿')">🌿</span><span onclick="insertEmoji('🎸')">🎸</span><span onclick="insertEmoji('☕')">☕</span><span onclick="insertEmoji('🏔️')">🏔️</span><span onclick="insertEmoji('🚲')">🚲</span><span onclick="insertEmoji('📸')">📸</span><span onclick="insertEmoji('❤️')">❤️</span><span onclick="insertEmoji('😂')">😂</span><span onclick="insertEmoji('😮')">😮</span><span onclick="insertEmoji('🙏')">🙏</span>
+          </div>
+          <div id="locationChip" class="location-chip" style="display:none;">📍 <span id="locationChipText">Тропа, лес</span> <button onclick="removeLocation()">✕</button></div>
+          <div id="mediaPreviewRow" class="media-preview-row"></div>
+          <input type="file" id="transmitFileInput" accept="image/*" style="display:none;" onchange="handleTransmitFile(event)">
+          <input type="file" id="transmitVideoInput" accept="video/*" style="display:none;" onchange="handleTransmitVideo(event)">
+          <div class="compose-tools">
+            <button class="icon-btn" onclick="document.getElementById('transmitFileInput').click()" title="Фото">📷</button>
+            <button class="icon-btn" onclick="document.getElementById('transmitVideoInput').click()" title="Короткое видео">🎥</button>
+            <button class="icon-btn" onclick="addMediaPlaceholder('🎙️','голос')" title="Голосовая заметка">🎙️</button>
+            <button class="icon-btn" onclick="toggleLocation()" title="Место">📍</button>
+            <button class="icon-btn" id="liveBtn" onclick="toggleLive()" title="Живой эфир в круге">🔴</button>
+          </div>
+          <div id="liveBanner" class="live-banner" style="display:none;">🔴 В эфире · <span id="liveViewers">0</span> смотрят <button onclick="toggleLive()">завершить</button></div>
+
+          <div class="eyebrow">Кто увидит</div>
+          <div class="visibility-row" id="transmitVis"><div class="vis-chip selected" onclick="selChip(this)">Все круги</div><div class="vis-chip" onclick="selChip(this)">Только «Тропа»</div><div class="vis-chip" onclick="selChip(this)">Только я</div></div>
+
+          <div class="eyebrow">Настройки публикации</div>
+          <div class="setting-row"><div>Разрешить ответы<span class="sub">публичные комментарии под сигналом</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><div>Разрешить реакции<span class="sub">эмодзи-отклики от читателей</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><div>Разрешить пересылку<span class="sub">другие смогут передать дальше в свой круг</span></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><div>Скрыть моё имя<span class="sub">покажется «Аноним из круга»</span></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="eyebrow">Когда опубликовать</div>
+          <div class="visibility-row">
+            <div class="vis-chip selected" onclick="setPublishMode(this,'now')">Сейчас</div>
+            <div class="vis-chip" onclick="setPublishMode(this,'later')">Запланировать</div>
+          </div>
+          <div id="scheduleRow" style="display:none;margin-top:10px;">
+            <input type="time" id="transmitScheduleTime" style="height:var(--btn);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:0 12px;color:var(--text);font-size:14px;">
+            <p class="hint" style="margin-top:6px;">Сигнал появится в ленте круга сам, в выбранное время сегодня.</p>
+          </div>
+
+          <button class="send-btn" id="transmitSendBtn" onclick="realPublish()">Передать в эфир</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATION -->
+    <div class="screen" id="station">
+      <div class="pull-indicator">потяни для поиска</div>
+      <div class="pull-content">
+        <div class="station-head">
+          <div class="station-avatar online" id="myAvatar" onclick="document.getElementById('avatarFileInput').click()"><span id="myAvatarLetter">Т</span><span class="cam-badge">📷</span></div>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarFile(event)">
+          <h2 id="myNameDisplay">Твой профиль</h2>
+          <p id="myNickDisplay">@ты · 6 кругов · с марта 2024</p>
+          <button class="join-btn" style="height:30px;padding:0 12px;margin-top:6px;" onclick="toggleNameEdit()">✎ имя и никнейм</button>
+          <div id="nameEditBox" style="display:none;margin:10px auto 0;width:100%;max-width:260px;text-align:left;">
+            <input id="myNameInput" placeholder="Имя" value="Твой профиль" style="width:100%;height:38px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:0 12px;color:var(--text);outline:none;font-size:13.5px;margin-bottom:8px;">
+            <input id="myNickInput" placeholder="никнейм" value="ты" style="width:100%;height:38px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:0 12px;color:var(--text);outline:none;font-size:13.5px;">
+            <button class="join-btn" style="width:100%;margin-top:8px;" onclick="saveNameEdit()">Сохранить</button>
+          </div>
+          <div class="status-pill">
+            <span class="dot"></span>
+            <span style="color:var(--text-dim);">сейчас:</span>
+            <span id="myStatusText" contenteditable="true" style="outline:none;" oninput="limitStatus(this)">работаю над макетом</span>
+            <span id="statusCount" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);">19/30</span>
+          </div>
+        </div>
+
+        <div class="circle-row" onclick="go('messages')" style="cursor:pointer;">
+          <div class="circle-icon">✉️</div>
+          <div class="info"><div class="cname">Личные сообщения</div><div class="csub">2 непрочитанных</div></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="unread-dot"></span><span style="color:var(--text-dim);font-size:16px;">›</span></div>
+        </div>
+
+        <div class="circle-row" onclick="openContacts()" style="cursor:pointer;">
+          <div class="circle-icon">📇</div>
+          <div class="info"><div class="cname">Найти друзей по контактам</div><div class="csub">синхронизация или добавление по номеру</div></div>
+          <span style="color:var(--text-dim);font-size:16px;">›</span>
+        </div>
+
+        <div class="eyebrow">Настройки</div>
+
+        <div class="settings-block open" id="blockAppearance">
+          <div class="settings-block-head" onclick="toggleBlock('blockAppearance')"><b>Оформление</b><span class="chev">⌄</span></div>
+          <div class="settings-block-body">
+            <p class="hint" style="margin:0 0 8px;">Тема переключается по-настоящему — меняются все экраны.</p>
+            <div class="theme-toggle-row">
+              <div class="theme-opt selected" id="optDark" onclick="setTheme('dark')"><div class="to-ic">●</div><div class="to-lbl">Тёмная</div></div>
+              <div class="theme-opt" id="optLight" onclick="setTheme('light')"><div class="to-ic">○</div><div class="to-lbl">Светлая</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-block" id="blockFeed">
+          <div class="settings-block-head" onclick="toggleBlock('blockFeed')"><b>Лента и подборка</b><span class="chev">⌄</span></div>
+          <div class="settings-block-body">
+            <div class="tuner-row"><div class="tuner-row-head"><b>Микс ленты</b><span id="mixVal">20%</span></div><p class="hint" id="mixDesc">В основном хронология, изредка — подборка по темам.</p><input type="range" min="0" max="100" value="20" oninput="updateMix(this.value)"></div>
+            <div class="tuner-row"><b style="font-size:13px;">Темы, которые интересны</b><div class="chips"><div class="chip selected">Природа</div><div class="chip selected">Музыка</div><div class="chip">Технологии</div><div class="chip">Кулинария</div></div></div>
+            <div class="setting-row"><div>Дайджест сейчас<span class="sub">демо: в жизни появляется сам, с 18:00 до полуночи</span></div><button class="join-btn" onclick="openDigest()">превью</button></div>
+          </div>
+        </div>
+
+        <div class="settings-block" id="blockNotif">
+          <div class="settings-block-head" onclick="toggleBlock('blockNotif')"><b>Уведомления</b><span class="chev">⌄</span></div>
+          <div class="settings-block-body">
+            <div class="tuner-row"><div class="tuner-row-head"><b>Частота</b><span id="notifVal">Дайджест</span></div><p class="hint" id="notifDesc">Раз в день собираем всё в одну сводку.</p><input type="range" min="0" max="2" value="1" step="1" oninput="updateNotif(this.value)"></div>
+            <div class="tuner-row"><div class="tuner-row-head"><b>Фокус-лимит</b><span id="focusVal">25 мин</span></div><p class="hint" id="focusDesc">Мягкая пауза после 25 минут подряд в приложении.</p><input type="range" min="0" max="60" value="25" step="5" oninput="updateFocus(this.value)"></div>
+          </div>
+        </div>
+
+        <div class="settings-block" id="blockAI">
+          <div class="settings-block-head" onclick="toggleBlock('blockAI')"><b>Ассистент</b><span class="chev">⌄</span></div>
+          <div class="settings-block-body">
+            <p class="hint" style="margin:0 0 10px;">Что шар-ассистент может подстраивать сам, без запроса каждый раз.</p>
+            <div class="setting-row"><div>Баланс ленты<span class="sub">сам двигает микс хронология/подборка</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div>Предлагать круги<span class="sub">по темам, которые ты отмечаешь</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div>Напоминать о паузе<span class="sub">если долго листаешь без остановки</span></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+            <button class="join-btn" style="width:100%;margin-top:12px;" onclick="openAI()">Открыть ассистента</button>
+          </div>
+        </div>
+
+        <div class="settings-block" id="blockPrivacy">
+          <div class="settings-block-head" onclick="toggleBlock('blockPrivacy')"><b>Приватность</b><span class="chev">⌄</span></div>
+          <div class="settings-block-body">
+            <div class="priv-item">
+              <div class="priv-label">Кто видит мой аватар<span class="sub">аватар — часто самое личное в профиле</span></div>
+              <div class="priv-chips"><div class="vis-chip selected" onclick="selChip(this)">Все</div><div class="vis-chip" onclick="selChip(this)">Мои круги</div><div class="vis-chip" onclick="selChip(this)">Никто</div></div>
+            </div>
+            <div class="priv-item">
+              <div class="priv-label">Кто видит статус «в сети»<span class="sub">и текст текущего статуса</span></div>
+              <div class="priv-chips"><div class="vis-chip selected" onclick="selChip(this)">Все</div><div class="vis-chip" onclick="selChip(this)">Мои круги</div><div class="vis-chip" onclick="selChip(this)">Никто</div></div>
+            </div>
+            <div class="priv-item">
+              <div class="priv-label">Кто может написать лично<span class="sub">остальные не смогут начать переписку</span></div>
+              <div class="priv-chips"><div class="vis-chip" onclick="selChip(this)">Все</div><div class="vis-chip selected" onclick="selChip(this)">Общие круги</div><div class="vis-chip" onclick="selChip(this)">Никто</div></div>
+            </div>
+            <div class="priv-item">
+              <div class="priv-label">Кто видит вехи и историю станции<span class="sub">таймлайн того, что ты публикуешь</span></div>
+              <div class="priv-chips"><div class="vis-chip selected" onclick="selChip(this)">Все</div><div class="vis-chip" onclick="selChip(this)">Мои круги</div><div class="vis-chip" onclick="selChip(this)">Никто</div></div>
+            </div>
+            <div class="setting-row"><div>Показывать в поиске<span class="sub">находят по имени те, кто не в общих кругах</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div>Показывать «в сети» глобально<span class="sub">общий выключатель поверх правила выше</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div>Двухфакторная защита<span class="sub">код при входе с нового устройства</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="navbar-wrap">
+    <div class="navbar">
+      <button class="nav-btn active" data-screen="feed"><span class="ic">▤</span>Сигналы</button>
+      <button class="nav-btn" data-screen="circles"><span class="ic">◎</span>Круги</button>
+      <div class="nav-gap"></div>
+      <button class="nav-btn" data-screen="transmit"><span class="ic">✎</span>Передать</button>
+      <button class="nav-btn" data-screen="station"><span class="ic">◆</span>Профиль</button>
+      <div class="ai-collar"></div>
+      <button class="ai-orb" onclick="openAI()"></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="profileOverlay" onclick="closeProfile()"></div>
+<div class="sheet" id="profileSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeProfile()">←</button><div class="who"><b id="profName">Марк Осин</b><span>в круге «Тропа» с 2023</span></div><button class="icon-btn" style="margin-left:auto;" onclick="closeProfile();openDM(currentProfile)">✎</button></div>
+  <div class="sheet-body">
+    <div style="text-align:center;margin-bottom:6px;" id="profAvatarWrap"></div>
+    <div id="profStatusWrap" style="text-align:center;"></div>
+    <div class="eyebrow">Вехи</div>
+    <div class="milestone-row">
+      <div class="milestone"><div class="mi">🥾</div><div class="mt">200 км пройдено</div><div class="ms">в круге «Тропа»</div></div>
+      <div class="milestone"><div class="mi">📸</div><div class="mt">42 сигнала</div><div class="ms">за этот год</div></div>
+      <div class="milestone"><div class="mi">🏔️</div><div class="mt">3 вершины</div><div class="ms">этим летом</div></div>
+    </div>
+    <div class="eyebrow">Что происходит</div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div><p>Нашёл место, где сосны расступаются и видно всю долину.</p><div class="tm">14 мин назад</div></div></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div><p>Вышел на маршрут рано утром, туман до полудня.</p><div class="tm">вчера</div></div></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div><p>Присоединился к кругу «Гараж-бэнд» — учится на гитаре.</p><div class="tm">3 дня назад</div></div></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="dmOverlay" onclick="closeDM()"></div>
+<div class="sheet" id="dmSheet">
+  <div class="sheet-head" style="position:relative;">
+    <button class="icon-btn" onclick="closeDM()">←</button>
+    <div class="dm-head-avatar online" id="dmHeadAvatar" onclick="closeDM();openProfile(currentDM)"></div>
+    <div class="who" onclick="closeDM();openProfile(currentDM)" style="cursor:pointer;"><b id="dmName">Марк Осин</b><span id="dmSubStatus">в сети</span></div>
+    <div style="margin-left:auto;display:flex;gap:6px;">
+      <button class="icon-btn" onclick="toggleDMSearch(event)">🔍</button>
+      <button class="icon-btn" onclick="toggleDMMenu(event)">⋯</button>
+    </div>
+    <div class="dm-search-bubble" id="dmSearchBubble">
+      <div class="row"><span>🔍</span><input id="dmSearchInput" placeholder="Поиск в этой переписке..." oninput="searchInDM(this.value)"></div>
+      <div class="dm-search-results" id="dmSearchResults"></div>
+    </div>
+    <div class="dm-menu" id="dmMenu">
+      <div class="dm-menu-item" onclick="closeDM();openProfile(currentDM)">👤 Профиль собеседника</div>
+      <div class="dm-menu-item" onclick="alert('Уведомления отключены (демо)')">🔕 Отключить уведомления</div>
+      <div class="dm-menu-item" onclick="alert('Показ медиа и файлов (демо)')">🖼 Медиа и файлы</div>
+      <div class="dm-menu-item" onclick="alert('Переписка очищена (демо)')">🗑 Очистить переписку</div>
+      <div class="dm-menu-item" style="color:var(--ember);" onclick="alert('Пользователь заблокирован (демо)')">🚫 Заблокировать</div>
+    </div>
+  </div>
+
+  <div class="sheet-body" id="dmBody" onscroll="onDMScroll()">
+    <div class="msg-row in"><div class="bubble in">Го в горы на выходных? Погода вроде обещает.</div></div>
+    <div class="msg-row out"><div class="bubble out">Го! Во сколько встречаемся у тропы?</div></div>
+    <div class="msg-row in"><div class="bubble in">Часов в семь утра, пока не жарко.</div></div>
+    <div class="msg-row in">
+      <div class="msg-voice" onclick="playVoice(this,'Марк · голосовое','0:18')">
+        <div class="vp-btn">▶</div><div class="vp-wave"></div><div class="vp-time">0:18</div>
+      </div>
+    </div>
+    <div class="msg-row out">
+      <div class="msg-circle-wrap"><div class="msg-circle" onclick="expandVideoCircle(this,'Ты · видео-кружок')">
+        <video src="" poster="" muted loop style="background:linear-gradient(135deg,#2a2f38,#181b21);"></video>
+        <div class="play-badge">▶</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="dm-attach-menu" id="dmAttachMenu">
+    <div class="dm-attach-grid">
+      <div class="dm-attach-item" onclick="document.getElementById('dmPhotoInput').click()"><span class="ic">📷</span>Фото</div>
+      <div class="dm-attach-item" onclick="document.getElementById('dmFileInput').click()"><span class="ic">📄</span>Документ</div>
+      <div class="dm-attach-item" onclick="attachDemo('🔗','Ссылка')"><span class="ic">🔗</span>Ссылка</div>
+      <div class="dm-attach-item" onclick="attachDemo('📍','Геопозиция')"><span class="ic">📍</span>Место</div>
+      <div class="dm-attach-item" onclick="document.getElementById('dmPhotoInput').click()"><span class="ic">🎞</span>Видео</div>
+      <div class="dm-attach-item" onclick="attachDemo('👤','Контакт')"><span class="ic">👤</span>Контакт</div>
+    </div>
+    <input type="file" id="dmPhotoInput" accept="image/*" style="display:none;" onchange="attachPhoto(event)">
+    <input type="file" id="dmFileInput" style="display:none;" onchange="attachFile(event)">
+  </div>
+
+  <div class="dm-sticker-panel" id="dmStickerPanel">
+    <div class="sticker-tabs">
+      <div class="vis-chip selected" onclick="stickerTab('emoji',this)">Смайлы</div>
+      <div class="vis-chip" onclick="stickerTab('stickers',this)">Стикеры</div>
+    </div>
+    <div id="stickerTabEmoji">
+      <div class="emoji-freq-row" id="emojiFreqRow"></div>
+      <div class="emoji-grid" id="emojiFullGrid"></div>
+    </div>
+    <div id="stickerTabStickers" style="display:none;">
+      <div class="sticker-grid" id="stickerGrid">
+        <div class="stk" onclick="sendSticker('🐻')">🐻</div><div class="stk" onclick="sendSticker('🌟')">🌟</div><div class="stk" onclick="sendSticker('🎉')">🎉</div><div class="stk" onclick="sendSticker('☕')">☕</div><div class="stk" onclick="sendSticker('🌧️')">🌧️</div><div class="stk" onclick="sendSticker('🦊')">🦊</div>
+        <button class="sticker-upload-btn" onclick="document.getElementById('stickerUploadInput').click()">+ загрузить свой набор</button>
+      </div>
+      <input type="file" id="stickerUploadInput" accept="image/*" multiple style="display:none;" onchange="uploadStickers(event)">
+    </div>
+  </div>
+
+  <div class="dm-input-pill">
+    <button class="dm-pill-icon" onclick="toggleAttachMenu()">＋</button>
+    <input placeholder="Написать лично..." id="dmInput" oninput="onDMInputChange()">
+    <button class="dm-pill-icon" onclick="toggleStickerPanel()">😊</button>
+    <button class="dm-pill-icon" id="dmMicBtn" onclick="micOrSend()">🎙️</button>
+    <div class="dm-mic-hint" id="dmMicHint">свайп вверх — видео-кружок</div>
+  </div>
+</div>
+
+<!-- expanded round video playback -->
+<div class="circle-expand-overlay" id="circleExpandOverlay" onclick="collapseVideoCircle(event)">
+  <video class="circle-expand-video" id="circleExpandVideo" onclick="toggleExpandPause(event)" muted loop></video>
+</div>
+
+<!-- persistent playback control bubble — follows across DMs and scrolling within Personal Messages -->
+<div class="media-player-bubble" id="mediaPlayerBubble">
+  <div class="mpb-row">
+    <button class="mpb-playpause" id="mpbPlayPause" onclick="mpbTogglePlay()">▶</button>
+    <input type="range" class="mpb-timeline" id="mpbTimeline" min="0" max="100" value="0" oninput="mpbSeek(this.value)">
+    <span id="mpbTimeLabel" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:34px;">0:00</span>
+    <button class="mpb-close" onclick="mpbClose()">✕</button>
+  </div>
+  <div class="mpb-speed-row">
+    <span class="mpb-speed-label" id="mpbSpeedLabel">1.0×</span>
+    <input type="range" class="mpb-speed" id="mpbSpeed" min="0.3" max="5" step="0.1" value="1" oninput="mpbSetSpeed(this.value)">
+  </div>
+</div>
+
+
+<div class="sheet-overlay" id="aiOverlay" onclick="closeAI()"></div>
+<div class="sheet" id="aiSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeAI()">←</button><div class="who"><b>Ассистент</b><span>настраивает платформу под тебя</span></div></div>
+  <div class="sheet-body" id="aiBody">
+    <div class="ai-chip">✦ на основе твоих настроек</div>
+    <div class="bubble in">Заметил, что ты почти не открываешь настройки ленты вручную. Могу сам плавно увеличивать долю подборки по темам «Природа» и «Музыка» — не резко, на пару процентов в неделю.</div>
+    <div class="ai-suggest"><button onclick="aiReply('Да, настрой сам')">Да, настрой сам</button><button onclick="aiReply('Пока не надо')">Пока не надо</button></div>
+  </div>
+  <div class="sheet-input"><input placeholder="Спросить ассистента..." id="aiInput"><button class="sheet-send" onclick="sendAI()">➤</button></div>
+</div>
+
+<!-- story viewer: the actual "what's happening with others" mechanism, equivalent to Instagram stories -->
+<div class="story-viewer" id="storyViewer">
+  <div class="story-progress" id="storyProgress"></div>
+  <div class="story-head">
+    <div class="savatar" id="storyAvatar" onclick="openProfileFromStory()" style="cursor:pointer;">А</div>
+    <div onclick="openProfileFromStory()" style="cursor:pointer;"><b id="storyName">Аня</b><span id="storyTime">только что</span></div>
+    <button class="story-close" onclick="closeStory()">✕</button>
+  </div>
+  <div class="story-stage" id="storyStage">
+    <div class="story-zone left" onclick="zoneTap('left')"></div>
+    <div class="story-zone right" onclick="zoneTap('right')"></div>
+    <p id="storyText">…</p>
+    <div class="story-heart" id="storyHeart">❤️</div>
+  </div>
+  <div class="story-caption" id="storyCaption"></div>
+  <div class="story-reply" id="storyReplyRow">
+    <input id="storyReplyInput" placeholder="Ответить...">
+    <button onclick="sendStoryReply()">➤</button>
+  </div>
+  <div class="story-reply" id="storyOwnBar" style="display:none;justify-content:center;cursor:pointer;" onclick="openMyStoryInsights()">
+    <span style="color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12px;">👁 <span id="storyOwnViews">0</span> просмотров — кто смотрел</span>
+  </div>
+</div>
+
+<!-- circle detail -->
+<div class="sheet-overlay" id="circleOverlay" onclick="closeCircleDetail()"></div>
+<div class="sheet" id="circleSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeCircleDetail()">←</button><div class="who"><b id="circleName">Тропа</b><span id="circleSub">34 человека</span></div></div>
+  <div style="display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;">
+    <button class="vis-chip selected" id="ctab-feed" onclick="circleTab('feed')" style="flex:0 0 auto;">Лента</button>
+    <button class="vis-chip" id="ctab-members" onclick="circleTab('members')" style="flex:0 0 auto;">Участники</button>
+    <button class="vis-chip" id="ctab-settings" onclick="circleTab('settings')" style="flex:0 0 auto;">Настройки</button>
+    <button class="vis-chip" id="ctab-analytics" onclick="circleTab('analytics')" style="flex:0 0 auto;">Аналитика</button>
+  </div>
+  <div class="sheet-body" id="circleBody">
+
+    <!-- ===== FEED TAB ===== -->
+    <div class="circle-tab" id="ctabbody-feed">
+      <p class="hint" id="circleDesc" style="margin:14px 0;"></p>
+      <div class="eyebrow" style="margin-top:0;">Живость круга</div>
+      <div class="liveliness" id="circleLiveBars"></div>
+      <p class="hint" id="circleLiveText" style="margin-top:6px;"></p>
+      <div class="eyebrow">Закреплено</div>
+      <div id="circlePinned"></div>
+      <div class="eyebrow">Свежее в круге</div>
+      <div id="circleFeed"></div>
+      <button class="join-btn" style="width:100%;margin-top:4px;" id="circleArchiveToggle" onclick="toggleCircleArchive()">Показать архив и отложенное</button>
+      <div id="circleArchived" style="display:none;margin-top:10px;"></div>
+    </div>
+
+    <!-- ===== MEMBERS TAB ===== -->
+    <div class="circle-tab" id="ctabbody-members" style="display:none;">
+      <div class="eyebrow" style="margin-top:0;">Тип круга</div>
+      <div id="circleTypeBadge" class="circle-tag" style="font-size:11px;padding:6px 10px;"></div>
+
+      <div class="eyebrow">Участники и роли</div>
+      <div id="circleRoles"></div>
+
+      <div id="circleRequests" style="display:none;">
+        <div class="eyebrow">Заявки на вступление</div>
+        <div id="circleRequestsList"></div>
+      </div>
+
+      <div id="circleOwnerTools" style="display:none;">
+        <div class="eyebrow">Управление (ты — основатель)</div>
+        <div class="setting-row"><div>Аня<span class="sub">участник</span></div><div style="display:flex;gap:6px;"><button class="join-btn" onclick="this.textContent='✓ модератор';this.style.color='var(--gold)';this.style.borderColor='var(--gold)';this.onclick=null;">→ модератор</button></div></div>
+        <div class="setting-row"><div>Дени<span class="sub">участник · ограничен: не может закреплять</span></div><button class="join-btn" style="color:var(--ember);border-color:var(--ember);" onclick="this.closest('.setting-row').remove();">убрать</button></div>
+        <button class="join-btn" style="width:100%;margin-top:6px;" onclick="alert('Ограничения для участника сохранены (демо): может писать, не может закреплять и приглашать.')">⚙ Ограничить участника</button>
+        <button class="join-btn" style="width:100%;margin-top:8px;color:var(--gold);border-color:var(--gold);" onclick="alert('Передача прав основателя требует подтверждения выбранного участника (демо).')">👑 Передать права основателя</button>
+      </div>
+
+      <div class="eyebrow">Приглашения</div>
+      <div id="circleInviteBlock"></div>
+    </div>
+
+    <!-- ===== SETTINGS TAB ===== -->
+    <div class="circle-tab" id="ctabbody-settings" style="display:none;">
+      <div id="circleOwnerSettings" style="display:none;">
+        <div class="eyebrow" style="margin-top:0;">Основные (основатель)</div>
+        <input id="circleEditName" placeholder="Название круга" style="width:100%;height:40px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:0 12px;color:var(--text);outline:none;font-size:13.5px;margin-bottom:8px;">
+        <textarea id="circleEditDesc" placeholder="Описание" style="width:100%;min-height:56px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);outline:none;font-size:13px;margin-bottom:8px;"></textarea>
+        <textarea id="circleEditRules" placeholder="Правила круга (видны всем перед вступлением)" style="width:100%;min-height:56px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);outline:none;font-size:13px;"></textarea>
+        <div class="eyebrow">Кто может вступить</div>
+        <div class="visibility-row">
+          <div class="vis-chip" onclick="selChip(this)" data-type="open">Открытый</div>
+          <div class="vis-chip" onclick="selChip(this)" data-type="request">По заявке</div>
+          <div class="vis-chip" onclick="selChip(this)" data-type="closed">Закрытый</div>
+        </div>
+        <button class="join-btn" style="width:100%;margin-top:10px;" onclick="alert('Изменения сохранены (демо)')">Сохранить</button>
+      </div>
+      <div class="eyebrow">Уведомления</div>
+      <div class="setting-row"><div>Получать сразу<span class="sub">а не дайджестом</span></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+      <div class="setting-row"><div>Закреплённые сигналы<span class="sub">уведомлять о новых</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="eyebrow">Лично для тебя</div>
+      <div class="setting-row"><div>Заглушить участника<span class="sub">его сигналы не показывать тебе — он не узнает</span></div><button class="join-btn" onclick="alert('Выбери участника для заглушения (демо)')">выбрать</button></div>
+      <div class="eyebrow">Опасная зона</div>
+      <div class="setting-row"><div>Покинуть круг<span class="sub">тихо, без уведомления остальным</span></div><button class="join-btn" style="color:var(--ember);border-color:var(--ember);" onclick="closeCircleDetail()">выйти</button></div>
+      <div class="setting-row" id="circleDeleteRow" style="display:none;"><div>Удалить круг<span class="sub">необратимо, для всех участников</span></div><button class="join-btn" style="color:var(--ember);border-color:var(--ember);" onclick="alert('Требуется подтверждение (демо)')">удалить</button></div>
+    </div>
+
+    <!-- ===== ANALYTICS TAB (owner only) ===== -->
+    <div class="circle-tab" id="ctabbody-analytics" style="display:none;">
+      <p class="hint" style="margin:14px 0;">Видно только тебе как основателю — не публичный рейтинг.</p>
+      <div class="eyebrow" style="margin-top:0;">Рост участников · 7 дней</div>
+      <div class="liveliness" id="circleGrowthBars"></div>
+      <div class="eyebrow">Активность</div>
+      <div id="circleAnalyticsStats"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- create circle -->
+<div class="sheet-overlay" id="circleCreateOverlay" onclick="closeCircleCreate()"></div>
+<div class="sheet" id="circleCreateSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeCircleCreate()">←</button><div class="who"><b>Новый круг</b><span>маленькое сообщество, не лента</span></div></div>
+  <div class="sheet-body">
+    <div class="compose-box" style="padding:14px;">
+      <input id="newCircleName" placeholder="Название круга" style="width:100%;border:none;background:none;color:var(--text);font-family:'Fraunces',serif;font-size:18px;outline:none;padding:6px 0;">
+      <textarea id="newCircleDesc" placeholder="Пара слов, о чём этот круг" style="min-height:60px;font-size:14px;"></textarea>
+      <div class="visibility-row">
+        <div class="vis-chip selected" onclick="selChip(this)">Открытый</div>
+        <div class="vis-chip" onclick="selChip(this)">Закрытый</div>
+      </div>
+      <button class="send-btn" onclick="createCircle()">Создать круг</button>
+    </div>
+  </div>
+</div>
+
+<!-- contacts sync -->
+<div class="sheet-overlay" id="contactsOverlay" onclick="closeContacts()"></div>
+<div class="sheet" id="contactsSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeContacts()">←</button><div class="who"><b>Друзья по контактам</b><span>найти тех, кто уже в SIGNAL</span></div></div>
+  <div class="sheet-body">
+    <button class="send-btn" style="margin-top:0;" onclick="syncContacts()">📇 Синхронизировать контакты телефона</button>
+    <p class="hint" id="contactsPrivacyNote" style="margin-top:10px;">Список контактов не выгружается на сервер целиком — сверяются только хэши номеров, совпадения показываются тебе одному.</p>
+
+    <div class="eyebrow">Или добавь по номеру</div>
+    <div style="display:flex;gap:8px;">
+      <input id="addByPhoneInput" placeholder="+7 900 000-00-00" style="flex:1;height:var(--btn);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:0 12px;color:var(--text);outline:none;font-size:13.5px;">
+      <button class="join-btn" onclick="addByPhone()">найти</button>
+    </div>
+    <div id="addByPhoneResult"></div>
+
+    <div id="contactsResults" style="display:none;">
+      <div class="eyebrow">Уже в SIGNAL</div>
+      <div id="contactsFoundList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- add spark -->
+<div class="sheet-overlay" id="addSparkOverlay" onclick="closeAddSpark()"></div>
+<div class="sheet" id="addSparkSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeAddSpark()">←</button><div class="who"><b>Новая искра</b><span>видна 24 часа, потом исчезает</span></div></div>
+  <div class="sheet-body">
+    <div class="spark-preview" id="sparkPreview">
+      <div class="spark-preview-media" id="sparkPreviewMedia" style="display:none;"></div>
+      <div class="spark-sticker" id="sparkSticker" style="display:none;" onclick="cycleSticker()">😊</div>
+      <p id="sparkPreviewText" contenteditable="true" data-placeholder="Текст искры..."></p>
+    </div>
+
+    <div class="eyebrow" style="margin-top:16px;">Фон</div>
+    <div class="bg-swatches">
+      <div class="bgsw" style="background:linear-gradient(135deg,#232a35,#12151b);" onclick="setSparkBg(this)"></div>
+      <div class="bgsw" style="background:linear-gradient(135deg,#49B8AA,#2C625A);" onclick="setSparkBg(this)"></div>
+      <div class="bgsw" style="background:linear-gradient(135deg,#D9A54B,#E2704A);" onclick="setSparkBg(this)"></div>
+      <div class="bgsw" style="background:linear-gradient(135deg,#8B7FD8,#49B8AA);" onclick="setSparkBg(this)"></div>
+      <div class="bgsw" style="background:#0A0C10;" onclick="setSparkBg(this)"></div>
+    </div>
+
+    <div class="eyebrow">Размер текста</div>
+    <input type="range" min="14" max="30" value="19" oninput="document.getElementById('sparkPreviewText').style.fontSize=this.value+'px'">
+
+    <div class="eyebrow">Медиа</div>
+    <div class="compose-tools" style="border-top:none;padding-top:0;">
+      <button class="icon-btn" onclick="addSparkMedia('📷')">📷</button>
+      <button class="icon-btn" onclick="addSparkMedia('🎥')">🎥</button>
+      <button class="icon-btn" onclick="toggleSticker()">😊</button>
+      <button class="icon-btn" onclick="removeSparkMedia()">✕</button>
+    </div>
+    <p class="hint">Фото/видео ложится фоном, стикер — картинка поверх картинки, текст — сверху.</p>
+
+    <button class="send-btn" onclick="publishSpark()">Опубликовать искру</button>
+  </div>
+</div>
+
+<!-- evening digest -->
+<div class="sheet-overlay" id="digestOverlay" onclick="closeDigest()"></div>
+<div class="sheet" id="digestSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeDigest()">←</button><div class="who"><b>Вечерний дайджест</b><span>с 18:00 до полуночи, дальше сам исчезает</span></div></div>
+  <div class="sheet-body">
+
+    <div class="digest-cat">Успей — исчезает</div>
+    <div class="digest-item urgent">
+      <div class="digest-num">🌿</div>
+      <div class="digest-body"><div class="digest-title">6 <span class="hl">новых искр</span> пропадут в полночь</div><div class="digest-sub">Аня, Марк, Лика и ещё 3 — досмотреть можно только сегодня.</div></div>
+    </div>
+
+    <div class="digest-cat">Личное</div>
+    <div class="digest-item">
+      <div class="digest-num">✉️</div>
+      <div class="digest-body"><div class="digest-title">2 непрочитанных сообщения</div><div class="digest-sub">Марк: «Го в горы на выходных?» · Лика скинула запись репетиции.</div></div>
+    </div>
+
+    <div class="digest-cat">Круги</div>
+    <div class="digest-item">
+      <div class="digest-num">🥾</div>
+      <div class="digest-body"><div class="digest-title">Тропа ожила сегодня</div><div class="digest-sub">3 новых сигнала — заметно больше обычного за день.</div></div>
+    </div>
+
+    <div class="digest-cat">Твой день</div>
+    <div class="digest-item">
+      <div class="digest-num">✎</div>
+      <div class="digest-body"><div class="digest-title">1 сигнал · 3 ответа · 2 реакции</div><div class="digest-sub">Спокойно, без гонки за цифрами. Хорошего вечера.</div></div>
+    </div>
+
+    <button class="send-btn" onclick="dismissDigest()">Понятно, до завтра</button>
+  </div>
+</div>
+
+<!-- author insights: who viewed / reacted -->
+<div class="sheet-overlay" id="insightsOverlay" onclick="closeInsights()"></div>
+<div class="sheet" id="insightsSheet">
+  <div class="sheet-head"><button class="icon-btn" onclick="closeInsights()">←</button><div class="who"><b>Твоя искра</b><span>кто посмотрел и отреагировал</span></div></div>
+  <div class="sheet-body">
+    <div class="eyebrow">Посмотрели · <span id="viewCount">0</span></div>
+    <div id="viewersList"></div>
+    <div class="eyebrow">Реакции</div>
+    <div id="reactionsList"></div>
+  </div>
+</div>
+
+<script>
+  let obIndex=0;
+  const obSlides=document.querySelectorAll('.ob-slide');
+  const obDots=document.querySelectorAll('.ob-dots span');
+  document.getElementById('obNext').onclick=()=>{
+    if(obIndex<2){obSlides[obIndex].classList.remove('active');obIndex++;obSlides[obIndex].classList.add('active');obDots.forEach((d,i)=>d.classList.toggle('active',i<=obIndex));if(obIndex===2)document.getElementById('obNext').textContent='Начать';}
+    else finishOnboard();
+  };
+  document.getElementById('obSkip').onclick=finishOnboard;
+  function finishOnboard(){document.getElementById('onboard').style.display='none';document.getElementById('app').style.display='flex';}
+
+  function go(id){
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.screen===id));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+    if(typeof mediaPlayerVisibilityCheck==='function') mediaPlayerVisibilityCheck();
+  }
+  document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>go(btn.dataset.screen)));
+
+  // multiple distinct reactions per post — Kolya's fire and Sasha's heart both show, never merged into one icon
+  const cardReactions={ c1:{'🤍':11,'🔥':1}, c2:{'🔥':20,'😂':5,'🙏':2} };
+  const myReaction={};
+  function renderReactions(id){
+    const data=cardReactions[id]||{};
+    const bar=document.getElementById('rxbar-'+id);
+    if(!bar) return;
+    const entries=Object.entries(data).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+    if(entries.length===0){ bar.innerHTML='<span class="rx-empty">Отозваться</span>'; return; }
+    const shown=entries.slice(0,5);
+    const restCount=entries.slice(5).reduce((s,[,n])=>s+n,0);
+    bar.innerHTML = shown.map(([e,n])=>`<span class="rx-pill">${e} ${n}</span>`).join('') + (restCount>0?`<span class="rx-more">+${restCount}</span>`:'');
+  }
+  function toggleReactionPicker(e,id){
+    e.stopPropagation();
+    document.querySelectorAll('.reaction-picker.open').forEach(p=>{ if(p.id!=='rxpicker-'+id) p.classList.remove('open'); });
+    document.getElementById('rxpicker-'+id).classList.toggle('open');
+  }
+  function pickReaction(e,id,emoji){
+    e.stopPropagation();
+    if(!cardReactions[id]) cardReactions[id]={};
+    const prev=myReaction[id];
+    if(prev){ cardReactions[id][prev]=Math.max(0,(cardReactions[id][prev]||1)-1); }
+    if(prev===emoji){ myReaction[id]=null; }
+    else{ cardReactions[id][emoji]=(cardReactions[id][emoji]||0)+1; myReaction[id]=emoji; }
+    renderReactions(id);
+    document.getElementById('rxpicker-'+id).classList.remove('open');
+  }
+  document.querySelectorAll('.reactions-bar').forEach(bar=>{
+    const id=bar.id.replace('rxbar-','');
+    if(!cardReactions[id]) cardReactions[id]={};
+    renderReactions(id);
+  });
+  document.body.addEventListener('click',()=>document.querySelectorAll('.reaction-picker.open').forEach(p=>p.classList.remove('open')));
+
+  document.querySelectorAll('.vis-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.vis-chip').forEach(x=>x.classList.remove('selected'));c.classList.add('selected');}));
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('selected')));
+  function toggleBlock(id){document.getElementById(id).classList.toggle('open');}
+
+  function updateMix(v){document.getElementById('mixVal').textContent=v+'%';const d=document.getElementById('mixDesc');if(v<15)d.textContent='Почти чистая хронология.';else if(v<50)d.textContent='В основном хронология, изредка подборка по темам.';else if(v<80)d.textContent='Поровну: хронология и подборка по темам.';else d.textContent='В основном подборка по темам.';}
+  function updateNotif(v){const map=['Раз в день','Важное сразу','Каждое сообщение'];const desc=['Раз в день собираем всё в одну сводку.','Сразу — только личные ответы и упоминания.','Уведомление на каждое сообщение и сигнал.'];document.getElementById('notifVal').textContent=map[v];document.getElementById('notifDesc').textContent=desc[v];}
+  function updateFocus(v){const el=document.getElementById('focusVal');const d=document.getElementById('focusDesc');if(v==0){el.textContent='Выключен';d.textContent='Никаких пауз.';}else{el.textContent=v+' мин';d.textContent='Мягкая пауза после '+v+' минут подряд в приложении.';}}
+  function setTheme(t){document.documentElement.setAttribute('data-theme', t);document.getElementById('optDark').classList.toggle('selected', t==='dark');document.getElementById('optLight').classList.toggle('selected', t==='light');}
+
+  const profiles={mark:'Марк Осин', lika:'Лика Ромм'};
+  // per-person privacy — demonstrates the setting actually doing something, not just sitting inert.
+  // Игорь closed his avatar to everyone; Соня hid her online status. Everyone else defaults to open.
+  const profilePrivacy={
+    mark:{avatarVisible:true, statusVisible:true, online:true},
+    lika:{avatarVisible:true, statusVisible:true, online:false},
+    igor:{avatarVisible:false, statusVisible:true, online:false},
+    sonya:{avatarVisible:true, statusVisible:false, online:true}
+  };
+  let currentProfile='mark';
+  function openProfile(id){
+    currentProfile=id;
+    document.getElementById('profName').textContent=profiles[id]||id;
+    const priv=profilePrivacy[id]||{avatarVisible:true,statusVisible:true,online:false};
+    const initial=(profiles[id]||id)[0];
+    const avWrap=document.getElementById('profAvatarWrap');
+    if(priv.avatarVisible){
+      avWrap.innerHTML=`<div class="station-avatar${priv.online?' online':''}" style="cursor:default;">${initial}</div>`;
+    } else {
+      avWrap.innerHTML=`<div class="avatar-locked">🔒</div><p class="hint" style="margin-top:8px;">Аватар скрыт настройками приватности</p>`;
+    }
+    const stWrap=document.getElementById('profStatusWrap');
+    stWrap.innerHTML = priv.statusVisible
+      ? `<div class="status-pill" style="display:inline-flex;"><span class="dot" style="background:${priv.online?'var(--teal)':'var(--text-dim)'};"></span>${priv.online?'сейчас: третий день в горах':'не в сети'}</div>`
+      : `<p class="hint">Статус скрыт настройками приватности</p>`;
+    document.getElementById('profileSheet').classList.add('open');
+    document.getElementById('profileOverlay').classList.add('open');
+  }
+  function closeProfile(){document.getElementById('profileSheet').classList.remove('open');document.getElementById('profileOverlay').classList.remove('open');}
+  let currentDM='mark';
+  const dmOnline={mark:true, lika:false, anya:true, deni:false, sonya:true, igor:false};
+  function openDM(id){
+    currentDM=id;
+    document.getElementById('dmName').textContent=profiles[id]||id;
+    document.getElementById('dmHeadAvatar').textContent=(profiles[id]||id)[0];
+    document.getElementById('dmHeadAvatar').classList.toggle('online', !!dmOnline[id]);
+    document.getElementById('dmSubStatus').textContent = dmOnline[id] ? 'в сети' : 'не в сети';
+    document.getElementById('dmSheet').classList.add('open');
+    document.getElementById('dmOverlay').classList.add('open');
+    mediaPlayerVisibilityCheck();
+  }
+  function closeDM(){
+    document.getElementById('dmSheet').classList.remove('open');
+    document.getElementById('dmOverlay').classList.remove('open');
+    document.getElementById('dmSearchBubble').classList.remove('open');
+    document.getElementById('dmMenu').classList.remove('open');
+    mediaPlayerVisibilityCheck();
+  }
+  function sendDM(){
+    const input=document.getElementById('dmInput');
+    if(!input.value.trim()) return;
+    const row=document.createElement('div'); row.className='msg-row out';
+    const b=document.createElement('div'); b.className='bubble out'; b.textContent=input.value;
+    row.appendChild(b);
+    document.getElementById('dmBody').appendChild(row);
+    input.value=''; onDMInputChange();
+    document.getElementById('dmBody').scrollTop=9999;
+  }
+  function micOrSend(){
+    const input=document.getElementById('dmInput');
+    if(input.value.trim()){ sendDM(); return; }
+    if(isRecording) stopRecording(); else startRecording();
+  }
+
+  // ===== search within this specific conversation =====
+  function toggleDMSearch(e){
+    e.stopPropagation();
+    document.getElementById('dmMenu').classList.remove('open');
+    const b=document.getElementById('dmSearchBubble');
+    b.classList.toggle('open');
+    if(b.classList.contains('open')) setTimeout(()=>document.getElementById('dmSearchInput').focus(),150);
+  }
+  function searchInDM(q){
+    const out=document.getElementById('dmSearchResults');
+    if(!q.trim()){ out.innerHTML=''; return; }
+    const hits=[...document.querySelectorAll('#dmBody .bubble')].filter(b=>b.textContent.toLowerCase().includes(q.toLowerCase()));
+    out.innerHTML = hits.length ? hits.map((h,i)=>{
+      const idx=h.textContent.toLowerCase().indexOf(q.toLowerCase());
+      const marked=h.textContent.slice(0,idx)+'<b>'+h.textContent.slice(idx,idx+q.length)+'</b>'+h.textContent.slice(idx+q.length);
+      return `<div class="dm-search-hit" onclick="jumpToHit(${i})">${marked}</div>`;
+    }).join('') : '<div class="dm-search-hit">Ничего не найдено</div>';
+    window._dmHits=hits;
+  }
+  function jumpToHit(i){
+    const el=window._dmHits[i]; if(!el) return;
+    el.scrollIntoView({block:'center'});
+    el.style.outline='2px solid var(--gold)';
+    setTimeout(()=>el.style.outline='',1200);
+    document.getElementById('dmSearchBubble').classList.remove('open');
+  }
+  function toggleDMMenu(e){
+    e.stopPropagation();
+    document.getElementById('dmSearchBubble').classList.remove('open');
+    document.getElementById('dmMenu').classList.toggle('open');
+  }
+  document.addEventListener('click',(e)=>{
+    const sb=document.getElementById('dmSearchBubble'), mn=document.getElementById('dmMenu');
+    if(sb && sb.classList.contains('open') && !sb.contains(e.target)) sb.classList.remove('open');
+    if(mn && mn.classList.contains('open') && !mn.contains(e.target)) mn.classList.remove('open');
+  });
+
+  // ===== attach menu =====
+  function toggleAttachMenu(){
+    document.getElementById('dmStickerPanel').classList.remove('open');
+    document.getElementById('dmAttachMenu').classList.toggle('open');
+  }
+  function attachDemo(icon,label){
+    const row=document.createElement('div'); row.className='msg-row out';
+    row.innerHTML=`<div class="bubble out">${icon} ${label} (демо)</div>`;
+    document.getElementById('dmBody').appendChild(row); document.getElementById('dmBody').scrollTop=9999;
+    document.getElementById('dmAttachMenu').classList.remove('open');
+  }
+  function attachPhoto(ev){
+    const file=ev.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const row=document.createElement('div'); row.className='msg-row out';
+      row.innerHTML=`<img src="${e.target.result}" style="max-width:200px;border-radius:16px;display:block;">`;
+      document.getElementById('dmBody').appendChild(row); document.getElementById('dmBody').scrollTop=9999;
+    };
+    reader.readAsDataURL(file);
+    document.getElementById('dmAttachMenu').classList.remove('open');
+  }
+  function attachFile(ev){
+    const file=ev.target.files[0]; if(!file) return;
+    const row=document.createElement('div'); row.className='msg-row out';
+    row.innerHTML=`<div class="bubble out">📄 ${file.name}</div>`;
+    document.getElementById('dmBody').appendChild(row); document.getElementById('dmBody').scrollTop=9999;
+    document.getElementById('dmAttachMenu').classList.remove('open');
+  }
+
+  // ===== emoji / stickers =====
+  const emojiList=['😀','😂','😍','🥲','😅','🙏','🔥','❤️','👍','👎','🎉','😢','😮','🤔','👏','🙌','💪','✨','🌿','☕','🎸','🚲','📸','🏔️','🌧️','☀️','🍕','🍩','⚽','🎵'];
+  const emojiFreq={'🔥':1};
+  function toggleStickerPanel(){
+    document.getElementById('dmAttachMenu').classList.remove('open');
+    const p=document.getElementById('dmStickerPanel');
+    p.classList.toggle('open');
+    if(p.classList.contains('open')){ renderEmojiFreq(); renderEmojiGrid(); }
+  }
+  function stickerTab(tab,el){
+    el.parentElement.querySelectorAll('.vis-chip').forEach(x=>x.classList.remove('selected')); el.classList.add('selected');
+    document.getElementById('stickerTabEmoji').style.display = tab==='emoji'?'block':'none';
+    document.getElementById('stickerTabStickers').style.display = tab==='stickers'?'block':'none';
+  }
+  function renderEmojiFreq(){
+    const top=Object.entries(emojiFreq).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+    document.getElementById('emojiFreqRow').innerHTML = top.map(e=>`<span onclick="insertEmojiDM('${e}')">${e}</span>`).join('') || '<span style="font-size:11px;color:var(--text-dim);">часто используемые появятся здесь</span>';
+  }
+  function renderEmojiGrid(){
+    document.getElementById('emojiFullGrid').innerHTML = emojiList.map(e=>`<span onclick="insertEmojiDM('${e}')">${e}</span>`).join('');
+  }
+  function insertEmojiDM(e){
+    const input=document.getElementById('dmInput');
+    input.value+=e; onDMInputChange();
+    emojiFreq[e]=(emojiFreq[e]||0)+1;
+    renderEmojiFreq();
+  }
+  function sendSticker(e){
+    const row=document.createElement('div'); row.className='msg-row out';
+    row.innerHTML=`<span style="font-size:56px;line-height:1;">${e}</span>`;
+    document.getElementById('dmBody').appendChild(row); document.getElementById('dmBody').scrollTop=9999;
+    document.getElementById('dmStickerPanel').classList.remove('open');
+  }
+  function uploadStickers(ev){
+    const files=[...ev.target.files];
+    const grid=document.getElementById('stickerGrid');
+    const uploadBtn=grid.querySelector('.sticker-upload-btn');
+    files.forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=e=>{
+        const tile=document.createElement('div'); tile.className='stk'; tile.style.backgroundImage=`url(${e.target.result})`;
+        tile.onclick=()=>sendCustomSticker(e.target.result);
+        grid.insertBefore(tile, uploadBtn);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function sendCustomSticker(url){
+    const row=document.createElement('div'); row.className='msg-row out';
+    row.innerHTML=`<img src="${url}" style="width:96px;height:96px;object-fit:cover;border-radius:16px;display:block;">`;
+    document.getElementById('dmBody').appendChild(row); document.getElementById('dmBody').scrollTop=9999;
+    document.getElementById('dmStickerPanel').classList.remove('open');
+  }
+
+  // ===== mic / camera: tap to record, empty-input scroll/drag switches voice<->video =====
+  let recordingMode='voice', isRecording=false, mediaRecorder=null, recordedChunks=[];
+  function onDMInputChange(){
+    const v=document.getElementById('dmInput').value.trim();
+    const btn=document.getElementById('dmMicBtn');
+    if(v){ btn.textContent='➤'; btn.classList.add('active-mode'); }
+    else{ btn.classList.remove('active-mode'); updateMicIcon(); }
+  }
+  function updateMicIcon(){
+    if(document.getElementById('dmInput').value.trim()) return;
+    document.getElementById('dmMicBtn').textContent = recordingMode==='video' ? '📹' : '🎙️';
+  }
+  const dmMicBtnEl_init = () => document.getElementById('dmMicBtn');
+  (function bindMicGestures(){
+    const btn=document.getElementById('dmMicBtn');
+    const hint=document.getElementById('dmMicHint');
+    let startY=0;
+    btn.addEventListener('wheel',e=>{
+      if(document.getElementById('dmInput').value.trim()) return;
+      e.preventDefault();
+      recordingMode = e.deltaY<0 ? 'video' : 'voice';
+      updateMicIcon();
+      hint.textContent = recordingMode==='video' ? 'видео-кружок' : 'голосовое сообщение';
+      hint.classList.add('show'); clearTimeout(window._micHintT); window._micHintT=setTimeout(()=>hint.classList.remove('show'),1200);
+    });
+    btn.addEventListener('touchstart',e=>{ startY=e.touches[0].clientY; },{passive:true});
+    btn.addEventListener('touchmove',e=>{
+      if(document.getElementById('dmInput').value.trim()) return;
+      const dy=e.touches[0].clientY-startY;
+      if(Math.abs(dy)>25){
+        recordingMode = dy<0 ? 'video' : 'voice';
+        updateMicIcon();
+        hint.textContent = recordingMode==='video' ? 'видео-кружок' : 'голосовое сообщение';
+        hint.classList.add('show'); clearTimeout(window._micHintT); window._micHintT=setTimeout(()=>hint.classList.remove('show'),1200);
+      }
+    },{passive:true});
+  })();
+  async function startRecording(){
+    const btn=document.getElementById('dmMicBtn');
+    try{
+      const constraints = recordingMode==='video' ? {video:true,audio:true} : {audio:true};
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      recordedChunks=[];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(recordedChunks,{type:recordingMode==='video'?'video/webm':'audio/webm'});
+        const url=URL.createObjectURL(blob);
+        insertRecordedMessage(url, recordingMode, true);
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      mediaRecorder.start();
+      isRecording=true; btn.textContent='⏺'; btn.classList.add('active-mode');
+    }catch(err){
+      // camera/mic not available or blocked (common inside a sandboxed preview) — insert a demo message instead of failing silently
+      insertRecordedMessage(null, recordingMode, false);
+    }
+  }
+  function stopRecording(){
+    if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+    isRecording=false;
+    document.getElementById('dmMicBtn').classList.remove('active-mode');
+    updateMicIcon();
+  }
+  function insertRecordedMessage(url,mode,real){
+    const dmBody=document.getElementById('dmBody');
+    if(mode==='voice'){
+      const row=document.createElement('div'); row.className='msg-row out';
+      const dur = real? '' : '0:0'+(3+Math.floor(Math.random()*5));
+      row.innerHTML=`<div class="msg-voice" data-url="${url||''}" data-real="${real}" onclick="playVoice(this,'Ты · голосовое','${dur}')"><div class="vp-btn">▶</div><div class="vp-wave"></div><div class="vp-time">${real?'●':dur}</div></div>`;
+      dmBody.appendChild(row);
+    } else {
+      const row=document.createElement('div'); row.className='msg-row out';
+      row.innerHTML=`<div class="msg-circle-wrap"><div class="msg-circle" onclick="expandVideoCircle(this,'Ты · видео-кружок')"><video src="${url||''}" muted loop style="background:linear-gradient(135deg,#2a2f38,#181b21);"></video><div class="play-badge">▶</div></div></div>`;
+      dmBody.appendChild(row);
+    }
+    dmBody.scrollTop=9999;
+  }
+
+  // ===== round video circle: expand center / collapse / pause =====
+  function expandVideoCircle(circleEl,label){
+    const srcVideo=circleEl.querySelector('video');
+    const overlay=document.getElementById('circleExpandOverlay');
+    const bigVideo=document.getElementById('circleExpandVideo');
+    if(srcVideo.getAttribute('src')){
+      bigVideo.src=srcVideo.src;
+      overlay.classList.add('open');
+      bindMediaPlayer(bigVideo,label);
+      bigVideo.play().catch(()=>{});
+    } else {
+      bigVideo.removeAttribute('src');
+      bigVideo.style.background=srcVideo.style.background;
+      overlay.classList.add('open');
+      const fake=new FakeMedia(8);
+      bindMediaPlayer(fake,label);
+      fake.play();
+    }
+  }
+  function collapseVideoCircle(e){
+    if(e.target.id!=='circleExpandOverlay') return;
+    document.getElementById('circleExpandOverlay').classList.remove('open');
+  }
+  function toggleExpandPause(e){
+    e.stopPropagation();
+    mpbTogglePlay();
+  }
+  function onDMScroll(){
+    document.getElementById('circleExpandOverlay').classList.remove('open');
+  }
+
+  // ===== voice playback (real or simulated) =====
+  function playVoice(el,label,durationStr){
+    const url=el.dataset.url;
+    if(url){
+      const audio=new Audio(url);
+      bindMediaPlayer(audio,label);
+      audio.play();
+    } else {
+      const secs = durationStr ? (parseInt(durationStr.split(':')[0])*60+parseInt(durationStr.split(':')[1])) : 18;
+      const fake=new FakeMedia(secs||18);
+      bindMediaPlayer(fake,label);
+      fake.play();
+    }
+  }
+
+  // ===== fake media clock for demo bubbles without a real recording =====
+  function FakeMedia(duration){
+    this.duration=duration; this.currentTime=0; this.paused=true; this.playbackRate=1; this._t=null;
+    this.play=()=>{ this.paused=false; clearInterval(this._t); this._t=setInterval(()=>{ this.currentTime+=0.2*this.playbackRate; if(this.currentTime>=this.duration){ this.currentTime=this.duration; this.pause(); } },200); };
+    this.pause=()=>{ this.paused=true; clearInterval(this._t); };
+  }
+
+  // ===== persistent media player bubble — speed 0.3x–5x, timeline, play/pause, close =====
+  let currentMediaEl=null, mpbRafId=null;
+  function bindMediaPlayer(mediaEl,label){
+    if(currentMediaEl && currentMediaEl.pause) currentMediaEl.pause();
+    currentMediaEl=mediaEl;
+    document.getElementById('mediaPlayerBubble').classList.add('show');
+    document.getElementById('mpbSpeed').value=mediaEl.playbackRate||1;
+    document.getElementById('mpbSpeedLabel').textContent=(mediaEl.playbackRate||1).toFixed(1)+'×';
+    mpbSyncPlayIcon();
+    cancelAnimationFrame(mpbRafId);
+    mpbTick();
+    mediaPlayerVisibilityCheck();
+  }
+  function mpbTick(){
+    if(currentMediaEl && !currentMediaEl.paused && currentMediaEl.duration){
+      const pct=(currentMediaEl.currentTime/currentMediaEl.duration)*100;
+      document.getElementById('mpbTimeline').value=pct||0;
+      document.getElementById('mpbTimeLabel').textContent=formatTime(currentMediaEl.currentTime);
+    }
+    mpbRafId=requestAnimationFrame(mpbTick);
+  }
+  function mpbTogglePlay(){
+    if(!currentMediaEl) return;
+    if(currentMediaEl.paused) currentMediaEl.play(); else currentMediaEl.pause();
+    mpbSyncPlayIcon();
+  }
+  function mpbSyncPlayIcon(){
+    document.getElementById('mpbPlayPause').textContent=(currentMediaEl && !currentMediaEl.paused)?'❚❚':'▶';
+    const overlayVideo=document.getElementById('circleExpandVideo');
+    if(currentMediaEl===overlayVideo){ /* keep in sync visually via native controls-less video */ }
+  }
+  function mpbSeek(val){
+    if(currentMediaEl && currentMediaEl.duration){ currentMediaEl.currentTime=(val/100)*currentMediaEl.duration; }
+  }
+  function mpbSetSpeed(val){
+    if(currentMediaEl){ currentMediaEl.playbackRate=parseFloat(val); }
+    document.getElementById('mpbSpeedLabel').textContent=parseFloat(val).toFixed(1)+'×';
+  }
+  function mpbClose(){
+    if(currentMediaEl && currentMediaEl.pause) currentMediaEl.pause();
+    document.getElementById('mediaPlayerBubble').classList.remove('show');
+    document.getElementById('circleExpandOverlay').classList.remove('open');
+    currentMediaEl=null;
+    cancelAnimationFrame(mpbRafId);
+  }
+  function formatTime(s){ s=Math.floor(s||0); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  // the control bubble only ever shows within the Personal Messages section — hide it elsewhere
+  function mediaPlayerVisibilityCheck(){
+    const inMessages = document.getElementById('messages').classList.contains('active') || document.getElementById('dmSheet').classList.contains('open');
+    if(!inMessages){ document.getElementById('mediaPlayerBubble').classList.remove('show'); }
+    else if(currentMediaEl){ document.getElementById('mediaPlayerBubble').classList.add('show'); }
+  }
+  function openAI(){document.getElementById('aiSheet').classList.add('open');document.getElementById('aiOverlay').classList.add('open');}
+  function closeAI(){document.getElementById('aiSheet').classList.remove('open');document.getElementById('aiOverlay').classList.remove('open');}
+  function aiReply(text){const body=document.getElementById('aiBody');const b=document.createElement('div');b.className='bubble out';b.textContent=text;body.appendChild(b);const r=document.createElement('div');r.className='bubble in';r.textContent=text.includes('Да')?'Готово — буду двигать плавно и покажу в настройках, что изменилось.':'Хорошо, оставлю ручной режим.';body.appendChild(r);body.scrollTop=9999;}
+  function sendAI(){const input=document.getElementById('aiInput');if(input.value.trim()){const b=document.createElement('div');b.className='bubble out';b.textContent=input.value;document.getElementById('aiBody').appendChild(b);input.value='';document.getElementById('aiBody').scrollTop=9999;}}
+
+  // ===== pull-to-search: drag the middle bar (any screen content) down halfway =====
+  const searchBubble=document.getElementById('searchBubble');
+  const MAXPULL=110, THRESHOLD=55; // "half" = pulled halfway to max
+  document.querySelectorAll('#feed, #circles').forEach(screen=>{
+    const content=screen.querySelector('.pull-content');
+    const indicator=screen.querySelector('.pull-indicator');
+    let startY=0, dragging=false, pulled=0;
+    function start(y){ if(screen.scrollTop>0) return; startY=y; dragging=true; }
+    function move(y){
+      if(!dragging) return;
+      const d=y-startY;
+      if(d<=0){ pulled=0; content.style.transform=''; indicator.style.opacity=0; return; }
+      pulled=Math.min(d*0.5, MAXPULL);
+      content.style.transform=`translateY(${pulled}px)`;
+      indicator.style.opacity=Math.min(pulled/THRESHOLD,1);
+      indicator.textContent = pulled>=THRESHOLD ? 'отпусти для поиска' : 'потяни для поиска';
+    }
+    function end(){
+      if(!dragging) return; dragging=false;
+      content.style.transform=''; indicator.style.opacity=0;
+      if(pulled>=THRESHOLD) openSearch();
+      pulled=0;
+    }
+    screen.addEventListener('touchstart',e=>start(e.touches[0].clientY),{passive:true});
+    screen.addEventListener('touchmove',e=>move(e.touches[0].clientY),{passive:true});
+    screen.addEventListener('touchend',end);
+    screen.addEventListener('mousedown',e=>start(e.clientY));
+    screen.addEventListener('mousemove',e=>{if(dragging)move(e.clientY);});
+    window.addEventListener('mouseup',end);
+  });
+  function openSearch(){
+    const active=document.querySelector('.screen.active').id;
+    document.getElementById('searchInput').placeholder = active==='circles' ? 'Поиск по кругам...' : 'Поиск по сигналам...';
+    searchBubble.classList.add('open');
+    setTimeout(()=>document.getElementById('searchInput').focus(),150);
+  }
+  document.addEventListener('click',(e)=>{
+    if(searchBubble.classList.contains('open') && !searchBubble.contains(e.target)){
+      searchBubble.classList.remove('open');
+    }
+  });
+  searchBubble.addEventListener('click',e=>e.stopPropagation());
+
+  // ===== story viewer: what's happening with others, right now =====
+  // ageHours drives the 24h expiry: sparks older than 24h are pruned from the bar on load.
+  const storyData=[
+    {name:'Аня', av:'А', dm:'anya', time:'12 мин назад', ageHours:0.2, caption:'', slides:['Утро началось с чая в саду. Никуда не спешу сегодня.','Соседский кот опять пришёл в гости.']},
+    {name:'Марк Осин', av:'М', dm:'mark', time:'40 мин назад', ageHours:0.7, caption:'Тропа, третий километр', slides:['Третий день в горах, связи почти нет.','Нашёл место, где видно всю долину.']},
+    {name:'Лика Ромм', av:'Л', dm:'lika', time:'1 ч назад', ageHours:1, caption:'', slides:['Записали черновик новой песни.','Звучит сыро, но мне нравится.']},
+    {name:'Дени', av:'Д', dm:'deni', time:'2 ч назад', ageHours:2, caption:'', slides:['Проехал 40 км без остановки, ноги гудят.']},
+    {name:'Соня', av:'С', dm:'sonya', time:'3 ч назад', ageHours:3, caption:'Рецепт скину, если зайдёт', slides:['Пробую новый рецепт кофе с кардамоном.','Пока не то — добавлю мёда.']},
+    {name:'Игорь', av:'И', dm:'igor', time:'5 ч назад', ageHours:5, caption:'', slides:['Проявил вчерашнюю плёнку — есть на что посмотреть.']}
+  ];
+  if(!profiles.anya){ Object.assign(profiles,{anya:'Аня',deni:'Дени',sonya:'Соня',igor:'Игорь'}); }
+
+  // prune anything past 24h on load (demo of the expiry rule)
+  storyData.forEach((p,i)=>{
+    if(p.ageHours>=24){ const el=document.getElementById('spark-'+i); if(el) el.remove(); }
+  });
+
+  let curPerson=0, curSlide=0, storyRafId=null, slideStartTime=0, storyPaused=false, pausedElapsed=0;
+  const DURATION=4000;
+
+  function openStory(i){
+    curPerson=i; curSlide=0;
+    document.getElementById('storyViewer').classList.add('open');
+    markSeen(i);
+    renderStory();
+  }
+  function markSeen(i){
+    const el=document.getElementById('spark-'+i);
+    if(el){ el.classList.remove('unread'); el.classList.add('seen'); }
+  }
+  function closeStory(){
+    cancelAnimationFrame(storyRafId);
+    document.getElementById('storyViewer').classList.remove('open');
+  }
+  function openProfileFromStory(){
+    const p=storyData[curPerson];
+    if(p.isMine) return;
+    cancelAnimationFrame(storyRafId);
+    openProfile(p.dm||p.name.toLowerCase());
+  }
+  function renderStory(){
+    cancelAnimationFrame(storyRafId);
+    const p=storyData[curPerson];
+    document.getElementById('storyAvatar').textContent=p.av;
+    document.getElementById('storyName').textContent=p.name;
+    document.getElementById('storyTime').textContent=p.time;
+    document.getElementById('storyText').textContent=p.slides[curSlide];
+    const cap=document.getElementById('storyCaption');
+    if(p.caption){ cap.textContent=p.caption; cap.classList.add('show'); } else { cap.classList.remove('show'); }
+    const bar=document.getElementById('storyProgress'); bar.innerHTML='';
+    p.slides.forEach((_,idx)=>{
+      const seg=document.createElement('div'); seg.className='seg'+(idx<curSlide?' done':'');
+      const i=document.createElement('i'); seg.appendChild(i); bar.appendChild(seg);
+    });
+    const stage=document.getElementById('storyStage');
+    stage.style.background = p.bg || 'linear-gradient(160deg,#232a35,#12151b)';
+    if(p.isMine){
+      document.getElementById('storyReplyRow').style.display='none';
+      document.getElementById('storyOwnBar').style.display='flex';
+      document.getElementById('storyOwnViews').textContent=(p.viewers||demoViewers).length;
+    } else {
+      document.getElementById('storyReplyRow').style.display='flex';
+      document.getElementById('storyOwnBar').style.display='none';
+    }
+    // single source of truth for both the visual bar and slide advancement — they can never drift apart
+    storyPaused=false; pausedElapsed=0; slideStartTime=performance.now();
+    storyRafId=requestAnimationFrame(tickStoryProgress);
+  }
+  function tickStoryProgress(){
+    if(storyPaused) return;
+    const bars=document.querySelectorAll('#storyProgress .seg i');
+    const elapsed=performance.now()-slideStartTime;
+    const ratio=Math.min(1, elapsed/DURATION);
+    if(bars[curSlide]) bars[curSlide].style.width=(ratio*100)+'%';
+    if(ratio>=1){ nextSlide(); return; }
+    storyRafId=requestAnimationFrame(tickStoryProgress);
+  }
+  function nextSlide(){
+    const p=storyData[curPerson];
+    if(curSlide<p.slides.length-1){ curSlide++; renderStory(); }
+    else nextPerson();
+  }
+  function prevSlide(){
+    if(curSlide>0){ curSlide--; renderStory(); }
+    else prevPerson();
+  }
+  function nextPerson(){
+    if(curPerson<storyData.length-1){ curPerson++; curSlide=0; markSeen(curPerson); renderStory(); }
+    else closeStory();
+  }
+  function prevPerson(){
+    if(curPerson>0){ curPerson--; curSlide=0; markSeen(curPerson); renderStory(); }
+    else renderStory();
+  }
+  // tap zones: single tap = move within slides; double tap = like (heart burst) — liking never touches the clock
+  let tapTimer=null, lastZone=null;
+  function zoneTap(dir){
+    if(tapTimer && lastZone===dir){ clearTimeout(tapTimer); tapTimer=null; doubleTapLike(); return; }
+    lastZone=dir;
+    tapTimer=setTimeout(()=>{ tapTimer=null; dir==='left'?prevSlide():nextSlide(); },260);
+  }
+  function doubleTapLike(){
+    const h=document.getElementById('storyHeart');
+    h.classList.remove('burst'); void h.offsetWidth; h.classList.add('burst');
+    // purely visual — playback and the progress bar keep running on their own clock, untouched
+  }
+  // horizontal swipe = jump between people (vertical/small movement = ignored, lets taps through)
+  let swipeStartX=0, swipeStartY=0;
+  const stage=document.getElementById('storyStage');
+  stage.addEventListener('touchstart', e=>{ swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY; });
+  stage.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-swipeStartX, dy=e.changedTouches[0].clientY-swipeStartY;
+    if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){ dx<0?nextPerson():prevPerson(); }
+  });
+  function sendStoryReply(){
+    const input=document.getElementById('storyReplyInput');
+    if(!input.value.trim()) return;
+    const p=storyData[curPerson]; const msg=input.value; input.value='';
+    closeStory();
+    openDM(p.dm);
+    const b=document.createElement('div'); b.className='bubble out'; b.textContent=msg;
+    document.getElementById('dmBody').appendChild(b); document.getElementById('dmBody').scrollTop=9999;
+  }
+
+  // ===== replies: reveal thread, add, edit own within 24h =====
+  function toggleReplies(btn){
+    btn.closest('.card-foot').nextElementSibling.classList.toggle('open');
+  }
+  function addReply(btn){
+    const row=btn.parentElement; const input=row.querySelector('input');
+    if(!input.value.trim()) return;
+    const item=document.createElement('div'); item.className='reply-item'; item.dataset.mine='true'; item.dataset.postedminutes='0';
+    item.innerHTML=`<div class="ravatar">Т</div><div class="rbody"><div class="rhead"><span class="rname">Ты</span><span class="rtime">сейчас</span><button class="redit" onclick="editReply(this)">✎ править</button></div><div class="rtext">${input.value.replace(/</g,'&lt;')}</div></div>`;
+    row.parentElement.insertBefore(item,row);
+    input.value='';
+  }
+  function editReply(btn){
+    const item=btn.closest('.reply-item');
+    const ageMin=parseInt(item.dataset.postedminutes||'0');
+    if(ageMin>=1440){ alert('Редактирование доступно только в течение 24 часов после ответа.'); return; }
+    const rtext=item.querySelector('.rtext');
+    if(item.querySelector('textarea')) return;
+    const cur=rtext.textContent;
+    const ta=document.createElement('textarea'); ta.value=cur; ta.rows=2;
+    rtext.replaceWith(ta); ta.focus();
+    btn.textContent='✓ сохранить';
+    btn.onclick=()=>{
+      const p=document.createElement('div'); p.className='rtext'; p.textContent=ta.value;
+      ta.replaceWith(p);
+      btn.textContent='✎ править'; btn.onclick=()=>editReply(btn);
+      const head=item.querySelector('.rhead .rtime'); head.textContent='изменено · только что';
+    };
+  }
+
+  // ===== circles: detail sheets, create, quick-join =====
+  const circleData={
+    tropa:{name:'Тропа', sub:'34 человека · пешие маршруты', desc:'Круг для тех, кто выходит на маршруты по выходным. Основан в 2023.', type:'open', owner:false,
+      live:[2,3,1,4,6,5,7], liveText:'7 сигналов за неделю — заметно больше обычного.',
+      growth:[30,31,31,32,33,33,34], activeTime:'Чаще всего пишут по вечерам, 19:00–21:00.', retention:'Из тех, кто вступил на этой неделе, уже сделали первый сигнал 2 из 3.', topContributor:'Чаще всех начинает разговор — Марк.', weekReactions:64, weekReplies:21,
+      pinned:{id:'p1', name:'Марк', text:'Сбор в субботу у входа в парк, 8:00'},
+      feed:[{id:'f1', name:'Марк', av:'М', text:'Нашёл место, где сосны расступаются...', time:'14 мин назад'},{id:'f2', name:'Аня', av:'А', text:'Кто идёт в субботу на четырёхчасовой маршрут?', time:'1 ч назад'},{id:'f7', name:'Ты', av:'Т', mine:true, text:'Возьму термос — идём до конца тропы?', time:'20 мин назад'}],
+      roles:[['Марк Осин','owner','основатель'],['Аня','mod','модератор'],['Ты','member','участник']],
+      requests:[]},
+    band:{name:'Гараж-бэнд', sub:'6 человек · закрытый круг', desc:'Репетиционная база на районе, играем по вечерам вторников.', type:'closed', owner:true,
+      live:[0,1,0,2,1,3,2], liveText:'3 сигнала за неделю — стабильный небольшой круг.',
+      growth:[4,4,5,5,6,6,6], activeTime:'Активность по вторникам вечером — день репетиций.', retention:'Все, кто вступил, до сих пор внутри.', topContributor:'Чаще всех пишет Лика.', weekReactions:19, weekReplies:9,
+      pinned:{id:'p2', name:'Ты', text:'Следующая репетиция во вторник в 19:00'},
+      feed:[{id:'f3', name:'Лика', av:'Л', text:'Собрали первую репетицию за полгода...', time:'1 ч назад'}],
+      roles:[['Ты','owner','основатель'],['Лика Ромм','member','участник']],
+      requests:[{name:'Игорь', note:'Играю на бас-гитаре, видел ваш пост'}]},
+    sosedi:{name:'Соседи · Тишинка', sub:'112 человек', desc:'Локальный круг по геометке дома — объявления, находки, соседская взаимопомощь.', type:'closed', owner:false,
+      live:[1,2,2,1,3,2,1], liveText:'Обычная неделя, без всплесков.',
+      growth:[108,109,110,110,111,111,112], activeTime:'Равномерно в течение дня.', retention:'—', topContributor:'—', weekReactions:12, weekReplies:5,
+      pinned:null,
+      feed:[{id:'f4', name:'Дени', av:'Д', text:'У подъезда цветёт жасмин...', time:'3 ч назад'}],
+      roles:[['Правление дома','owner','основатели · 3'],['Ты и ещё 108','member','участники']],
+      requests:[]},
+    film:{name:'Плёночная фотография', sub:'890 человек · открытый круг', desc:'Обмен кадрами, проявка, советы по плёночным камерам.', type:'open', owner:false,
+      live:[4,5,6,5,7,8,9], liveText:'Растёт всю неделю — 9 сигналов вчера.',
+      growth:[860,865,870,878,882,886,890], activeTime:'Пик по выходным.', retention:'—', topContributor:'—', weekReactions:210, weekReplies:88,
+      pinned:{id:'p3', name:'Модераторы', text:'Правила круга — почитай перед первым постом'},
+      feed:[{id:'f5', name:'Игорь', av:'И', text:'Проявил вчерашнюю плёнку...', time:'5 ч назад'}],
+      roles:[['Модераторы · 4','mod','модераторы'],['890 участников','member','участники']],
+      requests:[]},
+    cook:{name:'Готовим без рецепта', sub:'240 человек · открытый круг', desc:'Импровизация на кухне — делимся тем, что получилось из того, что было в холодильнике.', type:'request', owner:false,
+      live:[3,2,4,3,5,4,6], liveText:'Живой круг — почти каждый день кто-то готовит.',
+      growth:[220,224,228,231,235,238,240], activeTime:'Вечером, ближе к ужину.', retention:'—', topContributor:'—', weekReactions:140, weekReplies:52,
+      pinned:null,
+      feed:[{id:'f6', name:'Соня', av:'С', text:'Пробую новый рецепт кофе с кардамоном...', time:'3 ч назад'}],
+      roles:[['Модераторы · 2','mod','модераторы'],['240 участников','member','участники']],
+      requests:[]}
+  };
+  const typeLabels={open:'🌍 Открытый — виден в поиске, входит любой', request:'✋ По заявке — нужно одобрение', closed:'🔒 Закрытый — только по приглашению'};
+  let currentCircleKey=null;
+
+  function circleTab(tab){
+    ['feed','members','settings','analytics'].forEach(t=>{
+      const btn=document.getElementById('ctab-'+t);
+      btn.classList.toggle('selected', t===tab);
+      document.getElementById('ctabbody-'+t).style.display = t===tab ? 'block' : 'none';
+    });
+  }
+  function renderFeedItem(c,item){
+    const canModerate = c.owner || c.roles.some(r=>r[0]==='Ты'&&r[1]==='mod');
+    const isMine = !!item.mine;
+    const scheduled = item.scheduleTime && !item.published;
+    const timeLabel = scheduled ? `⏳ выйдет в ${item.scheduleTime}` : (item.time||'');
+    let actions = '';
+    if(canModerate) actions += `<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;" onclick="circlePin('${item.id}')">📌 закрепить</button>`;
+    if(isMine){
+      actions += `<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;" onclick="circleEditItem('${item.id}')">✎ редактировать</button>`;
+      actions += `<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;" onclick="circleScheduleItem('${item.id}')">🕒 время публикации</button>`;
+    }
+    if(isMine || canModerate) actions += `<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;" onclick="circleArchiveItem('${item.id}')">🗄 архив</button>`;
+    if(isMine || canModerate) actions += `<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;color:var(--ember);border-color:var(--ember);" onclick="circleDeleteItem('${item.id}')">✕ удалить</button>`;
+    return `<div class="timeline-item" id="citem-${item.id}" style="align-items:flex-start;${scheduled?'opacity:.6;':''}">
+      <div class="timeline-dot" style="${scheduled?'background:var(--gold);':''}"></div>
+      <div style="flex:1;">
+        <p id="citext-${item.id}"><b>${item.name}${isMine?' · ты':''}:</b> ${item.text}</p>
+        <div class="tm">${timeLabel}</div>
+        <div id="cisched-${item.id}" style="display:none;margin-top:6px;"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">${actions}</div>
+      </div>
+    </div>`;
+  }
+  function renderCircleFeed(){
+    const c=circleData[currentCircleKey];
+    document.getElementById('circlePinned').innerHTML = c.pinned ? `<div class="timeline-item"><div class="timeline-dot" style="background:var(--gold);"></div><div><p>📌 <b>${c.pinned.name}:</b> ${c.pinned.text}</p></div></div>` : `<p class="hint">Ничего не закреплено.</p>`;
+    document.getElementById('circleFeed').innerHTML = c.feed.filter(f=>!f.archived).map(f=>renderFeedItem(c,f)).join('') || '<p class="hint">Пока пусто.</p>';
+    const arch = c.feed.filter(f=>f.archived);
+    document.getElementById('circleArchived').innerHTML = arch.map(f=>`<div class="timeline-item"><div class="timeline-dot" style="background:var(--text-dim);"></div><div><p style="opacity:.6;">🗄 <b>${f.name}:</b> ${f.text}</p>${(f.mine||c.owner)?`<button class="join-btn" style="height:26px;padding:0 8px;font-size:9px;margin-top:4px;" onclick="circleRestoreItem('${f.id}')">вернуть в ленту</button>`:''}</div></div>`).join('') || '<p class="hint">Пусто.</p>';
+  }
+  function circlePin(id){
+    const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(!item) return;
+    c.pinned={name:item.name, text:item.text}; renderCircleFeed();
+  }
+  function circleEditItem(id){
+    const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(!item) return;
+    const p=document.getElementById('citext-'+id);
+    if(document.getElementById('cedit-'+id)) return; // already editing
+    const ta=document.createElement('textarea'); ta.id='cedit-'+id; ta.value=item.text;
+    ta.style.cssText='width:100%;min-height:50px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--text);font-size:13px;';
+    const saveBtn=document.createElement('button'); saveBtn.className='join-btn'; saveBtn.style.cssText='height:28px;padding:0 8px;font-size:9.5px;margin-top:6px;';
+    saveBtn.textContent='✓ сохранить'; saveBtn.onclick=()=>{ item.text=ta.value; renderCircleFeed(); };
+    p.replaceWith(ta); ta.after(saveBtn); ta.focus();
+  }
+  function circleScheduleItem(id){
+    const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(!item) return;
+    const box=document.getElementById('cisched-'+id);
+    if(box.style.display==='block'){ box.style.display='none'; return; }
+    box.style.display='block';
+    box.innerHTML=`<div style="display:flex;gap:8px;align-items:center;">
+      <input type="time" id="ctime-${id}" value="${item.scheduleTime||''}" style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--text);font-size:13px;">
+      <button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;" onclick="confirmSchedule('${id}')">применить</button>
+      ${item.scheduleTime?`<button class="join-btn" style="height:28px;padding:0 8px;font-size:9.5px;color:var(--ember);border-color:var(--ember);" onclick="clearSchedule('${id}')">убрать</button>`:''}
+    </div><p class="hint" style="margin-top:6px;">Пост будет скрыт из общей ленты круга и появится сам в выбранное время сегодня.</p>`;
+  }
+  function confirmSchedule(id){
+    const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(!item) return;
+    const val=document.getElementById('ctime-'+id).value;
+    if(!val) return;
+    item.scheduleTime=val; item.published=false;
+    renderCircleFeed();
+  }
+  function clearSchedule(id){
+    const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(!item) return;
+    item.scheduleTime=null; item.published=true; renderCircleFeed();
+  }
+  function circleArchiveItem(id){ const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(item){ item.archived=true; renderCircleFeed(); } }
+  function circleRestoreItem(id){ const c=circleData[currentCircleKey]; const item=c.feed.find(f=>f.id===id); if(item){ item.archived=false; renderCircleFeed(); } }
+  function circleDeleteItem(id){ const c=circleData[currentCircleKey]; c.feed=c.feed.filter(f=>f.id!==id); renderCircleFeed(); }
+  function toggleCircleArchive(){
+    const el=document.getElementById('circleArchived');
+    const open = el.style.display!=='none';
+    el.style.display = open?'none':'block';
+    document.getElementById('circleArchiveToggle').textContent = open?'Показать архив и отложенное':'Скрыть архив';
+  }
+  function renderCircleInvite(){
+    const c=circleData[currentCircleKey];
+    if(!c.owner){ document.getElementById('circleInviteBlock').innerHTML='<p class="hint">Пригласительные ссылки создаёт основатель или модератор.</p>'; return; }
+    document.getElementById('circleInviteBlock').innerHTML=`
+      <div class="setting-row"><div>Активная ссылка<span class="sub">signal.app/j/${currentCircleKey}7f2 · до 7 дней или 20 переходов</span></div><button class="join-btn" onclick="alert('Скопировано (демо)')">копировать</button></div>
+      <div class="setting-row"><div>Отозвать ссылку<span class="sub">старая перестанет работать</span></div><button class="join-btn" style="color:var(--ember);border-color:var(--ember);" onclick="alert('Ссылка отозвана, создана новая (демо)')">отозвать</button></div>`;
+  }
+  function renderCircleRequests(){
+    const c=circleData[currentCircleKey];
+    const box=document.getElementById('circleRequests');
+    if(c.type!=='request' || !c.owner || c.requests.length===0){ box.style.display='none'; return; }
+    box.style.display='block';
+    document.getElementById('circleRequestsList').innerHTML = c.requests.map((r,i)=>`
+      <div class="setting-row"><div>${r.name}<span class="sub">${r.note}</span></div><div style="display:flex;gap:6px;"><button class="join-btn" onclick="circleReq(${i},true)">принять</button><button class="join-btn" style="color:var(--ember);border-color:var(--ember);" onclick="circleReq(${i},false)">отклонить</button></div></div>`).join('');
+  }
+  function circleReq(i,accept){
+    const c=circleData[currentCircleKey]; const r=c.requests[i];
+    if(accept){ c.roles.push([r.name,'member','участник']); }
+    c.requests.splice(i,1); renderCircleRequests(); renderCircleMembers();
+  }
+  function renderCircleMembers(){
+    const c=circleData[currentCircleKey];
+    document.getElementById('circleTypeBadge').textContent = typeLabels[c.type];
+    document.getElementById('circleRoles').innerHTML=c.roles.map(r=>`<div class="role-row" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;"><span>${r[0]}</span><span class="circle-tag">${r[2]}</span></div>`).join('');
+    document.getElementById('circleOwnerTools').style.display = c.owner ? 'block' : 'none';
+    renderCircleInvite(); renderCircleRequests();
+  }
+  function renderCircleAnalytics(){
+    const c=circleData[currentCircleKey];
+    const mn=Math.min(...c.growth), mx=Math.max(...c.growth);
+    document.getElementById('circleGrowthBars').innerHTML=c.growth.map(v=>`<i class="${v===mx?'hot':''}" style="height:${Math.max(6,(v-mn+1)/(mx-mn+1)*20)}px;"></i>`).join('');
+    document.getElementById('circleAnalyticsStats').innerHTML=`
+      <div class="milestone-row">
+        <div class="milestone"><div class="mi">💬</div><div class="mt">${c.weekReplies} ответов</div><div class="ms">за неделю</div></div>
+        <div class="milestone"><div class="mi">💜</div><div class="mt">${c.weekReactions} реакций</div><div class="ms">за неделю</div></div>
+      </div>
+      <p class="hint" style="margin-top:12px;">⏱ ${c.activeTime}</p>
+      <p class="hint">🌱 ${c.retention}</p>
+      <p class="hint">🗣 ${c.topContributor}</p>`;
+  }
+  function openCircleDetail(key){
+    const c=circleData[key]; if(!c) return;
+    currentCircleKey=key;
+    circleTab('feed');
+    document.getElementById('ctab-analytics').style.display = c.owner ? 'inline-flex' : 'none';
+    document.getElementById('circleName').textContent=c.name;
+    document.getElementById('circleSub').textContent=c.sub;
+    document.getElementById('circleDesc').textContent=c.desc;
+    document.getElementById('circleLiveText').textContent=c.liveText;
+    const max=Math.max(...c.live);
+    document.getElementById('circleLiveBars').innerHTML=c.live.map(v=>`<i class="${v>=max-1?'hot':''}" style="height:${Math.max(6,v/max*20)}px;"></i>`).join('');
+    renderCircleFeed();
+    renderCircleMembers();
+    if(c.owner) renderCircleAnalytics();
+    document.getElementById('circleOwnerSettings').style.display = c.owner ? 'block' : 'none';
+    document.getElementById('circleDeleteRow').style.display = c.owner ? 'flex' : 'none';
+    if(c.owner){
+      document.getElementById('circleEditName').value=c.name;
+      document.getElementById('circleEditDesc').value=c.desc;
+      document.getElementById('circleEditRules').value='';
+      document.querySelectorAll('#ctabbody-settings .vis-chip[data-type]').forEach(ch=>ch.classList.toggle('selected', ch.dataset.type===c.type));
+    }
+    document.getElementById('circleSheet').classList.add('open');
+    document.getElementById('circleOverlay').classList.add('open');
+  }
+  function closeCircleDetail(){document.getElementById('circleSheet').classList.remove('open');document.getElementById('circleOverlay').classList.remove('open');}
+  function openCircleCreate(){document.getElementById('circleCreateSheet').classList.add('open');document.getElementById('circleCreateOverlay').classList.add('open');}
+  function closeCircleCreate(){document.getElementById('circleCreateSheet').classList.remove('open');document.getElementById('circleCreateOverlay').classList.remove('open');}
+  function selChip(el){ el.parentElement.querySelectorAll('.vis-chip').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); }
+  function createCircle(){
+    const name=document.getElementById('newCircleName').value.trim();
+    if(!name) return;
+    const row=document.createElement('div'); row.className='circle-row';
+    row.innerHTML=`<div class="circle-icon">◎</div><div class="info"><div class="cname">${name}</div><div class="csub">1 человек · только что создан</div></div><button class="join-btn">внутри</button>`;
+    document.getElementById('newCirclesHost').appendChild(row);
+    document.getElementById('newCircleName').value=''; document.getElementById('newCircleDesc').value='';
+    closeCircleCreate();
+  }
+  // joining pulls this circle's recent signals straight into the feed — that's the whole point of joining
+  const joinFeedContent={
+    film:{name:'Игорь', av:'И', text:'Проявил вчерашнюю плёнку — есть на что посмотреть.', tag:'Плёночная фотография'},
+    cook:{name:'Соня', av:'С', text:'Пробую новый рецепт кофе с кардамоном.', tag:'Готовим без рецепта'}
+  };
+  function quickJoin(btn,key){
+    btn.textContent='внутри'; btn.style.color='var(--teal)'; btn.style.borderColor='var(--teal-dim)';
+    const c=joinFeedContent[key]; if(!c) return;
+    const feedContent=document.querySelector('#feed .pull-content');
+    const cardId='qj'+Date.now();
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="card-head"><div class="avatar">${c.av}</div><div class="who"><div class="name">${c.name}</div><div class="meta">только что · новое из круга</div></div><div class="circle-tag">${c.tag}</div></div><p>${c.text}</p><div class="card-foot"><div class="reactions-bar" id="rxbar-${cardId}" onclick="toggleReactionPicker(event,'${cardId}')"></div><div class="reaction-picker" id="rxpicker-${cardId}"><div class="r" onclick="pickReaction(event,'${cardId}','🤍')">🤍</div><div class="r" onclick="pickReaction(event,'${cardId}','🔥')">🔥</div><div class="r" onclick="pickReaction(event,'${cardId}','😮')">😮</div><div class="r" onclick="pickReaction(event,'${cardId}','🙏')">🙏</div><div class="r" onclick="pickReaction(event,'${cardId}','😂')">😂</div></div><button class="reply-btn" onclick="toggleReplies(this)">Ответить · 0</button></div><div class="replies-panel"><div class="reply-add"><input placeholder="Написать ответ..."><button onclick="addReply(this)">➤</button></div></div>`;
+    feedContent.insertBefore(card, feedContent.children[1]);
+    cardReactions[cardId]={};
+    renderReactions(cardId);
+  }
+
+  // ===== add spark: background, text size, media, sticker, live preview =====
+  let sparkBg='linear-gradient(135deg,#232a35,#12151b)', sparkMedia=null, sparkHasSticker=false;
+  const stickerSet=['😊','🔥','🌿','☕','🎸','📸'];
+  let stickerIdx=0;
+  function openAddSpark(){document.getElementById('addSparkSheet').classList.add('open');document.getElementById('addSparkOverlay').classList.add('open');}
+  function closeAddSpark(){document.getElementById('addSparkSheet').classList.remove('open');document.getElementById('addSparkOverlay').classList.remove('open');}
+  function setSparkBg(el){
+    document.querySelectorAll('.bgsw').forEach(x=>x.classList.remove('selected')); el.classList.add('selected');
+    sparkBg=el.style.background;
+    document.getElementById('sparkPreview').style.background=el.style.background;
+  }
+  function addSparkMedia(icon){
+    sparkMedia=icon;
+    const m=document.getElementById('sparkPreviewMedia');
+    m.style.display='flex'; m.textContent=icon+' медиа';
+  }
+  function removeSparkMedia(){ sparkMedia=null; document.getElementById('sparkPreviewMedia').style.display='none'; }
+  function toggleSticker(){
+    sparkHasSticker=!sparkHasSticker;
+    document.getElementById('sparkSticker').style.display = sparkHasSticker ? 'flex' : 'none';
+  }
+  function cycleSticker(){ stickerIdx=(stickerIdx+1)%stickerSet.length; document.getElementById('sparkSticker').textContent=stickerSet[stickerIdx]; }
+  function publishSpark(){
+    const caption=document.getElementById('sparkPreviewText').textContent.trim();
+    const fontSize=document.getElementById('sparkPreviewText').style.fontSize||'19px';
+    const idx=storyData.length;
+    storyData.push({name:'Ты', av:'Т', dm:'', time:'только что', ageHours:0, caption:'', isMine:true, bg:sparkBg, slides:[caption||'Новая искра'], viewers:demoViewers, reactions:demoReactions});
+    const el=document.createElement('div'); el.className='spark mine'; el.id='spark-'+idx;
+    el.setAttribute('onclick', `openStory(${idx})`);
+    el.innerHTML='<div class="inner">Т</div>';
+    document.getElementById('sparksBar').insertBefore(el, document.getElementById('sparksBar').children[1]);
+    document.getElementById('sparkPreviewText').textContent='';
+    removeSparkMedia();
+    closeAddSpark();
+  }
+
+  // ===== author insights: who viewed / who reacted (on your own spark) =====
+  const demoViewers=[
+    {name:'Аня', time:'2 мин назад'},{name:'Марк Осин', time:'6 мин назад'},{name:'Дени', time:'12 мин назад'}
+  ];
+  const demoReactions=[{emoji:'🤍',names:['Аня','Лика Ромм']},{emoji:'🔥',names:['Дени']}];
+  function openMyStoryInsights(){
+    const p=storyData[curPerson];
+    const viewers=(p&&p.viewers)||demoViewers, reactions=(p&&p.reactions)||demoReactions;
+    document.getElementById('viewCount').textContent=viewers.length;
+    document.getElementById('viewersList').innerHTML=viewers.map(v=>`<div class="dm-row" style="cursor:default;"><div class="avatar">${v.name[0]}</div><div class="info"><div class="name">${v.name}</div><div class="last">${v.time}</div></div></div>`).join('');
+    document.getElementById('reactionsList').innerHTML=reactions.map(r=>`<div class="dm-row" style="cursor:default;"><div class="avatar">${r.emoji}</div><div class="info"><div class="name">${r.names.join(', ')}</div></div></div>`).join('');
+    document.getElementById('insightsSheet').classList.add('open');
+    document.getElementById('insightsOverlay').classList.add('open');
+  }
+  function closeInsights(){document.getElementById('insightsSheet').classList.remove('open');document.getElementById('insightsOverlay').classList.remove('open');}
+
+  // ===== contact sync =====
+  // Real contact access on the web only exists via the Contact Picker API — Chrome on Android,
+  // over HTTPS, one contact selection at a time, no background/automatic sync. iOS Safari and
+  // desktop browsers don't expose it at all; there we fall back to manual add-by-phone.
+  const registeredByPhone={ '+79001234567':'Аня', '+79007654321':'Дени' };
+  function openContacts(){document.getElementById('contactsSheet').classList.add('open');document.getElementById('contactsOverlay').classList.add('open');}
+  function closeContacts(){document.getElementById('contactsSheet').classList.remove('open');document.getElementById('contactsOverlay').classList.remove('open');}
+  async function syncContacts(){
+    const note=document.getElementById('contactsPrivacyNote');
+    if(navigator.contacts && navigator.contacts.select){
+      try{
+        const props=['name','tel'];
+        const picked=await navigator.contacts.select(props,{multiple:true});
+        matchAndShowContacts(picked.map(c=>({name:(c.name&&c.name[0])||'Контакт', tel:(c.tel&&c.tel[0])||''})));
+        return;
+      }catch(e){ note.textContent='Доступ к контактам не подтверждён — можно добавить по номеру ниже.'; return; }
+    }
+    // fallback: this browser doesn't expose contacts to web pages at all — demo the matching result honestly
+    note.textContent='Этот браузер не даёт сайтам доступ к списку контактов (так у iOS Safari и десктопа). Показываю, как выглядел бы результат синхронизации.';
+    matchAndShowContacts([{name:'Аня',tel:'+79001234567'},{name:'Дени',tel:'+79007654321'},{name:'Костя',tel:'+79009999999'}]);
+  }
+  function matchAndShowContacts(list){
+    const box=document.getElementById('contactsResults'); const out=document.getElementById('contactsFoundList');
+    const found=list.filter(c=>registeredByPhone[c.tel]);
+    box.style.display='block';
+    out.innerHTML = found.length ? found.map(c=>`<div class="dm-row" style="cursor:default;"><div class="avatar">${registeredByPhone[c.tel][0]}</div><div class="info"><div class="name">${registeredByPhone[c.tel]}</div><div class="last">из контакта «${c.name}»</div></div><button class="join-btn" onclick="this.textContent='добавлен';this.style.color='var(--teal)';">добавить</button></div>`).join('')
+      : '<p class="hint">Среди выбранных контактов пока никто не зарегистрирован.</p>';
+  }
+  function addByPhone(){
+    const val=document.getElementById('addByPhoneInput').value.trim();
+    const out=document.getElementById('addByPhoneResult');
+    const name=registeredByPhone[val];
+    out.innerHTML = name
+      ? `<div class="dm-row" style="cursor:default;margin-top:10px;"><div class="avatar">${name[0]}</div><div class="info"><div class="name">${name}</div><div class="last">найден в SIGNAL</div></div><button class="join-btn" onclick="this.textContent='добавлен';this.style.color='var(--teal)';">добавить</button></div>`
+      : `<p class="hint" style="margin-top:10px;">По этому номеру никто не зарегистрирован. Можно пригласить — отправим ссылку по SMS (демо).</p>`;
+  }
+
+  function toggleNameEdit(){
+    const box=document.getElementById('nameEditBox');
+    box.style.display = box.style.display==='none' ? 'block' : 'none';
+  }
+  function saveNameEdit(){
+    const name=document.getElementById('myNameInput').value.trim()||'Твой профиль';
+    const nick=document.getElementById('myNickInput').value.trim().replace(/^@/,'')||'ты';
+    document.getElementById('myNameDisplay').textContent=name;
+    document.getElementById('myNickDisplay').textContent=`@${nick} · 6 кругов · с марта 2024`;
+    document.getElementById('nameEditBox').style.display='none';
+  }
+
+  // ===== avatar upload, online ring, status editing (30 chars) =====
+  function handleAvatarFile(ev){
+    const file=ev.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const av=document.getElementById('myAvatar');
+      av.style.backgroundImage=`url(${e.target.result})`;
+      document.getElementById('myAvatarLetter').style.display='none';
+    };
+    reader.readAsDataURL(file);
+  }
+  function limitStatus(el){
+    let t=el.textContent;
+    if(t.length>30){ t=t.slice(0,30); el.textContent=t; placeCaretAtEnd(el); }
+    document.getElementById('statusCount').textContent=t.length+'/30';
+  }
+  function placeCaretAtEnd(el){
+    const range=document.createRange(); range.selectNodeContents(el); range.collapse(false);
+    const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  }
+
+  // ===== transmit composer: formatting, emoji, media, location, live =====
+  function fmt(cmd){ document.getElementById('transmitText').focus(); document.execCommand(cmd,false,null); }
+  function toggleEmojiPicker(){ document.getElementById('emojiPicker').classList.toggle('open'); }
+  function insertEmoji(e){ document.getElementById('transmitText').focus(); document.execCommand('insertText',false,e); }
+  function toggleLocation(){
+    const chip=document.getElementById('locationChip');
+    chip.style.display = chip.style.display==='none' ? 'inline-flex' : 'none';
+  }
+  function removeLocation(){ document.getElementById('locationChip').style.display='none'; }
+  function addMediaPlaceholder(icon,label){
+    const row=document.getElementById('mediaPreviewRow');
+    const el=document.createElement('div'); el.className='media-thumb'; el.innerHTML=icon+`<button onclick="this.parentElement.remove()">✕</button>`; el.title=label;
+    row.appendChild(el);
+  }
+  function handleTransmitFile(ev){
+    const file=ev.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const row=document.getElementById('mediaPreviewRow');
+      const el=document.createElement('div'); el.className='media-thumb'; el.style.backgroundImage=`url(${e.target.result})`;
+      el.dataset.kind='photo';
+      el.innerHTML=`<button onclick="this.parentElement.remove()">✕</button>`;
+      row.appendChild(el);
+    };
+    reader.readAsDataURL(file);
+  }
+  function handleTransmitVideo(ev){
+    const file=ev.target.files[0]; if(!file) return;
+    const url=URL.createObjectURL(file);
+    const row=document.getElementById('mediaPreviewRow');
+    const el=document.createElement('div'); el.className='media-thumb'; el.dataset.kind='video';
+    el.innerHTML=`<video src="${url}" muted style="width:100%;height:100%;object-fit:cover;border-radius:10px;"></video><button onclick="this.parentElement.remove()">✕</button>`;
+    row.appendChild(el);
+  }
+  let publishMode='now';
+  function setPublishMode(el,mode){
+    el.parentElement.querySelectorAll('.vis-chip').forEach(x=>x.classList.remove('selected')); el.classList.add('selected');
+    publishMode=mode;
+    document.getElementById('scheduleRow').style.display = mode==='later' ? 'block' : 'none';
+    document.getElementById('transmitSendBtn').textContent = mode==='later' ? 'Запланировать' : 'Передать в эфир';
+  }
+  function realPublish(){
+    const textEl=document.getElementById('transmitText');
+    const text=textEl.innerText.trim();
+    const hasMedia=document.getElementById('mediaPreviewRow').children.length>0;
+    if(!text && !hasMedia){ textEl.focus(); return; }
+    if(publishMode==='later'){
+      const t=document.getElementById('transmitScheduleTime').value;
+      if(!t){ document.getElementById('transmitScheduleTime').focus(); return; }
+      alert('Запланировано на '+t+' — появится в ленте само, без твоего участия.');
+      resetTransmit();
+      return;
+    }
+    const feedContent=document.querySelector('#feed .pull-content');
+    const cardId='tx'+Date.now();
+    const media=[...document.getElementById('mediaPreviewRow').children].map(m=>m.dataset.kind==='video'?'<div class="card-media">видео · только что</div>':`<div class="card-media" style="background-image:url(${m.style.backgroundImage.slice(5,-2)});background-size:cover;"></div>`).join('');
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="card-head"><div class="avatar online">Т</div><div class="who"><div class="name">Ты</div><div class="meta">только что</div></div><div class="circle-tag">${document.querySelector('#transmitVis .vis-chip.selected').textContent}</div></div><p>${textEl.innerHTML||''}</p>${media}<div class="card-foot"><div class="reactions-bar" id="rxbar-${cardId}" onclick="toggleReactionPicker(event,'${cardId}')"></div><div class="reaction-picker" id="rxpicker-${cardId}"><div class="r" onclick="pickReaction(event,'${cardId}','🤍')">🤍</div><div class="r" onclick="pickReaction(event,'${cardId}','🔥')">🔥</div><div class="r" onclick="pickReaction(event,'${cardId}','😮')">😮</div><div class="r" onclick="pickReaction(event,'${cardId}','🙏')">🙏</div><div class="r" onclick="pickReaction(event,'${cardId}','😂')">😂</div></div><button class="reply-btn" onclick="toggleReplies(this)">Ответить · 0</button></div><div class="replies-panel"><div class="reply-add"><input placeholder="Написать ответ..."><button onclick="addReply(this)">➤</button></div></div>`;
+    feedContent.insertBefore(card, feedContent.children[1]);
+    cardReactions[cardId]={}; renderReactions(cardId);
+    resetTransmit();
+    go('feed');
+  }
+  function resetTransmit(){
+    document.getElementById('transmitText').innerHTML='';
+    document.getElementById('mediaPreviewRow').innerHTML='';
+    document.getElementById('locationChip').style.display='none';
+    document.getElementById('transmitScheduleTime').value='';
+  }
+
+  let liveOn=false;
+  function toggleLive(){
+    liveOn=!liveOn;
+    document.getElementById('liveBtn').classList.toggle('active', liveOn);
+    document.getElementById('liveBanner').style.display = liveOn ? 'flex' : 'none';
+    if(liveOn){
+      let n=Math.floor(Math.random()*4)+1;
+      document.getElementById('liveViewers').textContent=n;
+      window._liveTimer=setInterval(()=>{ n+=Math.random()>0.5?1:0; document.getElementById('liveViewers').textContent=n; },2500);
+    } else { clearInterval(window._liveTimer); }
+  }
+
+  // ===== evening digest =====
+  function openDigest(){document.getElementById('digestSheet').classList.add('open');document.getElementById('digestOverlay').classList.add('open');}
+  function closeDigest(){document.getElementById('digestSheet').classList.remove('open');document.getElementById('digestOverlay').classList.remove('open');}
+  // digest window: 18:00–24:00, and stays dismissed once closed via "Понятно, до завтра" (in-memory here;
+  // a real build would key this off the device date so it resets automatically the next evening)
+  let digestDismissed=false;
+  function dismissDigest(){ digestDismissed=true; document.getElementById('digestBanner').style.display='none'; closeDigest(); }
+  function refreshDigestVisibility(){
+    const h=new Date().getHours();
+    const inWindow = h>=18 && h<24;
+    document.getElementById('digestBanner').style.display = (inWindow && !digestDismissed) ? 'flex' : 'none';
+  }
+  refreshDigestVisibility();
+  setInterval(refreshDigestVisibility, 60000);
+</script>
+</body>
+</html>
